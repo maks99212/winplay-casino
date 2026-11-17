@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- Подключаем официальный SDK Telegram -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<script>
+    // Ждём, пока SDK загрузится
+    window.addEventListener('load', function() {
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            
+            // Сообщаем Telegram, что приложение готово
+            tg.ready();
+            
+            // Разворачиваем приложение на весь экран (убирает лишние отступы)
+            tg.expand();
+
+            // (Опционально) Можно получить данные пользователя Telegram
+            // const user = tg.initDataUnsafe.user;
+            // console.log('Пользователь:', user);
+        } else {
+            console.log('Приложение открыто вне Telegram');
+        }
+    });
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice | Winplay</title>
+    <style>
+        :root {
+            --bg: #0f1115;
+            --card: #1c1f26;
+            --text: #e6e8ee;
+            --muted: #8b92a5;
+            --border: #2a2e39;
+            --accent: #5b8cff;
+            --gold: #ffd166;
+            --green: #22c55e;
+            --red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========== ШАПКА ========== */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 17, 21, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.4rem;
+            color: #fff;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+        .logo span { color: var(--accent); }
+
+        .user-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .balance {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .balance b { color: var(--gold); }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: #252932;
+            transform: translateY(-1px);
+        }
+        .btn-primary {
+            background: var(--accent);
+            border: none;
+            color: #fff;
+        }
+        .btn-primary:hover { background: #4a7aff; }
+
+        .profile-widget {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--card);
+            padding: 4px 12px 4px 4px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: var(--text);
+        }
+        .profile-widget:hover { border-color: var(--accent); }
+        .avatar-mini {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .profile-id {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        /* ========== ОСНОВНОЙ КОНТЕНТ ========== */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .back-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .back-btn:hover { color: #fff; border-color: #fff; }
+
+        /* ========== DICE ========== */
+        .dice-main {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 24px;
+            max-width: 600px;
+            margin: 0 auto 90px;
+        }
+
+        .dice-result {
+            text-align: center;
+            font-size: 2.4rem;
+            font-weight: 900;
+            margin-bottom: 24px;
+            min-height: 3rem;
+            color: var(--muted);
+            transition: color 0.3s;
+        }
+        .dice-result.win { color: var(--green); }
+        .dice-result.lose { color: var(--red); }
+
+        .dice-track-wrap {
+            position: relative;
+            padding-top: 44px;
+            margin-bottom: 24px;
+        }
+
+        .dice-arrow {
+            position: absolute;
+            top: 0;
+            left: 49.5%;
+            transform: translateX(-50%);
+            padding: 5px 10px;
+            background: var(--gold);
+            color: #111;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 800;
+            white-space: nowrap;
+            transition:
+                left 1.2s cubic-bezier(0.25, 0.8, 0.35, 1),
+                background 0.3s,
+                color 0.3s;
+            z-index: 3;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+        .dice-arrow::after {
+            content: '';
+            position: absolute;
+            bottom: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-top: 7px solid var(--gold);
+            transition: border-top-color 0.3s;
+        }
+        .dice-arrow.win {
+            background: var(--green);
+            color: #fff;
+        }
+        .dice-arrow.win::after {
+            border-top-color: var(--green);
+        }
+        .dice-arrow.lose {
+            background: var(--red);
+            color: #fff;
+        }
+        .dice-arrow.lose::after {
+            border-top-color: var(--red);
+        }
+
+        .dice-slider-track {
+            height: 22px;
+            background: #0f121a;
+            border-radius: 12px;
+            display: flex;
+            overflow: visible;
+            position: relative;
+        }
+        .dice-zone {
+            height: 100%;
+            transition: width 0.25s ease-out;
+        }
+        .dice-zone.green {
+            background: linear-gradient(180deg, #2ee06a, #16a34a);
+            border-radius: 12px 0 0 12px;
+        }
+        .dice-zone.red {
+            background: linear-gradient(180deg, #ff6060, #b91c1c);
+            border-radius: 0 12px 12px 0;
+        }
+        .dice-thumb {
+            position: absolute;
+            top: 50%;
+            width: 30px;
+            height: 30px;
+            background: #fff;
+            border: 3px solid var(--bg);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: left 0.2s ease-out;
+            z-index: 4;
+            box-shadow:
+                0 0 0 2px rgba(255, 255, 255, 0.15),
+                0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .dice-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        .dice-chance-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+        .dice-chance-row .lbl {
+            color: var(--muted);
+            font-weight: 600;
+        }
+        .dice-chance-row .val {
+            color: var(--gold);
+        }
+
+        #dSlider {
+            width: 100%;
+            margin: 4px 0 20px;
+            accent-color: var(--accent);
+        }
+
+        #dPlayBtn {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            transition: transform 0.15s, filter 0.15s, background 0.2s;
+        }
+        #dPlayBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+        #dPlayBtn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #dPlayBtn.rolling {
+            animation: dicePulse 0.6s ease-in-out infinite alternate;
+        }
+        @keyframes dicePulse {
+            from { transform: scale(1); }
+            to   { transform: scale(1.03); }
+        }
+
+        /* ========== ХОТБАР ========== */
+        .hotbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(28, 31, 38, 0.98);
+            border-top: 1px solid var(--border);
+            padding: 14px;
+            display: flex;
+            justify-content: center;
+            z-index: 200;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .hotbar input {
+            width: 120px;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: #fff;
+            outline: none;
+        }
+        .hotbar .hotbar-label {
+            color: var(--muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* ========== ТОСТ ========== */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px 20px;
+            border-radius: 12px;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            max-width: 340px;
+            font-weight: 600;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.win { border-color: var(--green); }
+        .toast.lose { border-color: var(--red); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-inner">
+            <a class="logo" href="index.html">Win<span>play</span></a>
+
+            <div class="user-box" id="userBox" style="display:none;">
+                <div class="balance">Баланс: <b id="balanceDisplay">0.00</b> ₽</div>
+                <a class="profile-widget" href="profile.html">
+                    <div class="avatar-mini" id="headerAvatar">👤</div>
+                    <div class="profile-id" id="headerId">#0000</div>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="game-header">
+            <a class="back-btn" href="index.html">← В лобби</a>
+            <h2>🎲 Dice</h2>
+        </div>
+
+        <div class="dice-main">
+            <div class="dice-result" id="dResult">—</div>
+
+            <div class="dice-track-wrap">
+                <div class="dice-arrow" id="dArrow">—</div>
+                <div class="dice-slider-track">
+                    <div class="dice-zone green" id="dGreen" style="width:49.5%"></div>
+                    <div class="dice-zone red" id="dRed" style="width:50.5%"></div>
+                    <div class="dice-thumb" id="dThumb" style="left:49.5%"></div>
+                </div>
+            </div>
+            <div class="dice-labels">
+                <span>0</span>
+                <span>50</span>
+                <span>100</span>
+            </div>
+
+            <div class="dice-chance-row" style="margin-top:18px;">
+                <span class="lbl">Шанс выигрыша</span>
+                <span class="val" id="dChanceVal">49.5%</span>
+            </div>
+            <input type="range" id="dSlider" min="2" max="98" value="49.5" oninput="updateDice()">
+
+            <div class="dice-chance-row">
+                <span class="lbl">Множитель</span>
+                <span class="val" id="dMultVal">×2.00</span>
+            </div>
+
+            <button class="btn btn-primary" id="dPlayBtn" onclick="betDice()">Играть</button>
+        </div>
+    </main>
+
+    <div class="hotbar">
+        <span class="hotbar-label">Ставка:</span>
+        <input type="number" id="globalBet" value="10.00" min="1" step="0.01">
+        <button class="btn btn-primary" onclick="saveGlobalBet()">Сохранить ставку</button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        /* ========== КЛЮЧИ ХРАНИЛИЩА ========== */
+        const U_KEY = 'roulette_users_v1';
+        const S_KEY = 'roulette_session_v1';
+        const G_KEY = 'roulette_game_settings_v1';
+
+        const load = (k, d) => {
+            try {
+                const r = localStorage.getItem(k);
+                return r ? JSON.parse(r) : d;
+            } catch (e) {
+                return d;
+            }
+        };
+        const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+        let users = load(U_KEY, {});
+        let curUser = load(S_KEY, null);
+
+        if (!curUser || !users[curUser]) {
+            location.href = 'index.html';
+        }
+
+        // Загружаем настройки из админки
+        const gameSettings = load(G_KEY, {});
+        const diceSettings = gameSettings.dice || { enabled: true, minBet: 10, maxBet: 10000, winChance: 50 };
+
+        if (diceSettings.enabled === false) {
+            alert('Игра находится на техническом перерыве');
+            location.href = 'index.html';
+        }
+
+        /* ========== УТИЛИТЫ ========== */
+        function getBal() {
+            if (!curUser || !users[curUser]) {
+                return 0;
+            }
+            return users[curUser].balance || 0;
+        }
+
+        function setBal(v) {
+            if (!curUser || !users[curUser]) {
+                return;
+            }
+            users[curUser].balance = Math.max(0, parseFloat(v.toFixed(2)));
+            save(U_KEY, users);
+            refreshUI();
+        }
+
+        function addWager(amt) {
+            if (!curUser || !users[curUser]) {
+                return;
+            }
+            if (!users[curUser].wagerRequired) {
+                return;
+            }
+            users[curUser].wagerProgress = (users[curUser].wagerProgress || 0) + amt;
+            if (users[curUser].wagerProgress >= users[curUser].wagerRequired) {
+                users[curUser].wagerRequired = 0;
+                users[curUser].wagerProgress = 0;
+                showToast('🎉 Вейджер отыгран! Средства разблокированы.', 'win');
+            }
+            save(U_KEY, users);
+        }
+
+        function showToast(txt, type = '') {
+            const t = document.getElementById('toast');
+            t.textContent = txt;
+            t.className = 'toast show ' + type;
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        function refreshUI() {
+            const userBox = document.getElementById('userBox');
+            if (!curUser || !users[curUser]) {
+                userBox.style.display = 'none';
+                return;
+            }
+            userBox.style.display = 'flex';
+
+            const u = users[curUser];
+            const cleanId = String(u.id || '').padStart(4, '0');
+            document.getElementById('balanceDisplay').textContent = getBal().toFixed(2);
+            document.getElementById('headerAvatar').textContent = u.avatar || '👤';
+            document.getElementById('headerId').textContent = '#' + cleanId;
+        }
+
+        function saveGlobalBet() {
+            const v = parseFloat(document.getElementById('globalBet').value);
+            if (v > 0) {
+                showToast('Ставка сохранена: ' + v.toFixed(2) + ' ₽', 'win');
+            }
+        }
+
+        /* ========== ЛОГИКА DICE ========== */
+        let diceRolling = false;
+
+        // Обновляет ползунок, шанс, множитель и зоны при движении слайдера
+        function updateDice() {
+            const slider = document.getElementById('dSlider');
+            const chance = parseFloat(slider.value);
+
+            // Множитель обратно пропорционален шансу: 99/шанс
+            // При шансе 49.5% множитель ≈ 2.00
+            const mult = 99 / chance;
+
+            document.getElementById('dChanceVal').textContent = chance.toFixed(1) + '%';
+            document.getElementById('dMultVal').textContent = '×' + mult.toFixed(2);
+
+            // Зелёная зона = шанс выигрыша, красная = остаток
+            document.getElementById('dGreen').style.width = chance + '%';
+            document.getElementById('dRed').style.width = (100 - chance) + '%';
+            document.getElementById('dThumb').style.left = chance + '%';
+
+            // Стрелка результата сбрасывается при движении слайдера
+            const arrow = document.getElementById('dArrow');
+            arrow.classList.remove('win', 'lose');
+            arrow.style.left = chance + '%';
+            arrow.textContent = chance.toFixed(1) + '%';
+
+            const result = document.getElementById('dResult');
+            result.textContent = '—';
+            result.classList.remove('win', 'lose');
+        }
+
+        // Основная логика игры
+        function betDice() {
+            if (diceRolling) {
+                return;
+            }
+
+            const bet = parseFloat(document.getElementById('globalBet').value);
+            if (!bet || bet <= 0) {
+                return showToast('Введите корректную ставку', 'lose');
+            }
+
+            // Проверка лимитов из админки
+            if (bet < diceSettings.minBet) {
+                return showToast('Мин. ставка: ' + diceSettings.minBet + ' ₽', 'lose');
+            }
+            if (bet > diceSettings.maxBet) {
+                return showToast('Макс. ставка: ' + diceSettings.maxBet + ' ₽', 'lose');
+            }
+            if (bet > getBal()) {
+                return showToast('Недостаточно средств', 'lose');
+            }
+
+            const slider = document.getElementById('dSlider');
+            const chance = parseFloat(slider.value);
+            const mult = 99 / chance;
+
+            // Списываем ставку
+            setBal(getBal() - bet);
+            addWager(bet);
+
+            // Статистика
+            users[curUser].totalBets = (users[curUser].totalBets || 0) + bet;
+            if (!users[curUser].history) {
+                users[curUser].history = [];
+            }
+            users[curUser].history.unshift({
+                type: 'bet',
+                amount: bet,
+                date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                details: 'Dice игра'
+            });
+            if (users[curUser].history.length > 20) {
+                users[curUser].history.pop();
+            }
+            save(U_KEY, users);
+
+            diceRolling = true;
+
+            const playBtn = document.getElementById('dPlayBtn');
+            playBtn.disabled = true;
+            playBtn.classList.add('rolling');
+            playBtn.textContent = 'Бросаем...';
+
+            const arrow = document.getElementById('dArrow');
+            arrow.classList.remove('win', 'lose');
+
+            const result = document.getElementById('dResult');
+            result.textContent = '—';
+            result.classList.remove('win', 'lose');
+
+            // Логика шанса админа:
+            // adminWinChance — процент от 0 до 100, при котором выигрывает ИГРОК
+            // Если random < adminWinChance — игрок выигрывает
+            const adminWinChance = diceSettings.winChance !== undefined ? diceSettings.winChance : 50;
+            const roll = Math.random() * 100;
+            const playerWins = roll < adminWinChance;
+
+            // Вычисляем, куда визуально упадёт стрелка
+            // Если игрок выиграл — стрелка попадает в зелёную зону (0..chance)
+            // Если проиграл — в красную зону (chance..100)
+            let finalPos;
+            if (playerWins) {
+                finalPos = Math.random() * chance;
+            } else {
+                finalPos = chance + Math.random() * (100 - chance);
+            }
+
+            // Небольшая задержка для анимации
+            setTimeout(() => {
+                arrow.style.left = finalPos + '%';
+                arrow.textContent = finalPos.toFixed(1);
+
+                // Определяем цвет по позиции относительно зелёной зоны
+                if (finalPos < chance) {
+                    arrow.classList.add('win');
+                } else {
+                    arrow.classList.add('lose');
+                }
+
+                // Выплата
+                if (playerWins) {
+                    const winAmount = bet * mult;
+                    setBal(getBal() + winAmount);
+                    result.textContent = '+' + winAmount.toFixed(2) + ' ₽';
+                    result.classList.add('win');
+                    showToast('🎉 Выигрыш +' + winAmount.toFixed(2) + ' ₽', 'win');
+
+                    users[curUser].history.unshift({
+                        type: 'win',
+                        amount: winAmount,
+                        date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                        details: 'Dice выигрыш (x' + mult.toFixed(2) + ')'
+                    });
+                    if (users[curUser].history.length > 20) {
+                        users[curUser].history.pop();
+                    }
+                    save(U_KEY, users);
+                } else {
+                    result.textContent = '−' + bet.toFixed(2) + ' ₽';
+                    result.classList.add('lose');
+                    showToast('Проигрыш −' + bet.toFixed(2) + ' ₽', 'lose');
+                }
+
+                diceRolling = false;
+                playBtn.disabled = false;
+                playBtn.classList.remove('rolling');
+                playBtn.textContent = 'Играть';
+            }, 1300);
+        }
+
+        /* ========== ИНИЦИАЛИЗАЦИЯ ========== */
+        refreshUI();
+        updateDice();
+
+        const globalBetInput = document.getElementById('globalBet');
+        globalBetInput.addEventListener('input', () => {
+            // Просто обновляем, чтобы не было рассинхрона
+        });
+    </script>
+</body>
+</html>

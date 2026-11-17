@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- Подключаем официальный SDK Telegram -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<script>
+    // Ждём, пока SDK загрузится
+    window.addEventListener('load', function() {
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            
+            // Сообщаем Telegram, что приложение готово
+            tg.ready();
+            
+            // Разворачиваем приложение на весь экран (убирает лишние отступы)
+            tg.expand();
+
+            // (Опционально) Можно получить данные пользователя Telegram
+            // const user = tg.initDataUnsafe.user;
+            // console.log('Пользователь:', user);
+        } else {
+            console.log('Приложение открыто вне Telegram');
+        }
+    });
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winplay — Играй и выигрывай</title>
+    <style>
+        :root {
+            --bg: #0f1115;
+            --card: #1c1f26;
+            --text: #e6e8ee;
+            --muted: #8b92a5;
+            --border: #2a2e39;
+            --accent: #5b8cff;
+            --gold: #ffd166;
+            --green: #22c55e;
+            --red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========== ШАПКА ========== */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 17, 21, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.4rem;
+            color: #fff;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+        .logo span { color: var(--accent); }
+
+        .user-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .balance {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .balance b { color: var(--gold); }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: #252932;
+            transform: translateY(-1px);
+        }
+        .btn-primary {
+            background: var(--accent);
+            border: none;
+            color: #fff;
+        }
+        .btn-primary:hover { background: #4a7aff; }
+        .btn-green {
+            background: var(--green);
+            border: none;
+            color: #fff;
+        }
+        .btn-green:hover { background: #16a34a; }
+
+        .profile-widget {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--card);
+            padding: 4px 12px 4px 4px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: var(--text);
+        }
+        .profile-widget:hover { border-color: var(--accent); }
+        .avatar-mini {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .profile-id {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        /* ========== ОСНОВНОЙ КОНТЕНТ ========== */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, rgba(91, 140, 255, 0.15), rgba(255, 209, 102, 0.05));
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 32px;
+            margin-bottom: 28px;
+            text-align: center;
+            animation: fade 0.4s ease-out;
+        }
+        .hero h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+        .hero h1 span { color: var(--accent); }
+        .hero p {
+            color: var(--muted);
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ========== СЕТКА ИГР ========== */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .game-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .game-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(91, 140, 255, 0.15);
+        }
+        .game-card.disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .game-card.disabled:hover {
+            transform: none;
+            border-color: var(--border);
+            box-shadow: none;
+        }
+        .game-icon {
+            font-size: 2.6rem;
+            line-height: 1;
+        }
+        .game-name {
+            font-weight: 800;
+            font-size: 1rem;
+        }
+        .game-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--red);
+        }
+
+        /* ========== БЫСТРЫЕ ДЕЙСТВИЯ ========== */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .action-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+        .action-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        .action-card.bonus-card-highlight {
+            border-color: rgba(255, 209, 102, 0.4);
+            background: linear-gradient(135deg, rgba(255, 209, 102, 0.08), rgba(91, 140, 255, 0.05));
+        }
+        .action-card.bonus-card-highlight:hover {
+            border-color: var(--gold);
+            box-shadow: 0 8px 24px rgba(255, 209, 102, 0.15);
+        }
+        .action-icon {
+            font-size: 1.8rem;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .action-info .title {
+            font-weight: 800;
+            font-size: 1rem;
+        }
+        .action-info .sub {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        /* ========== ПРОМОКОД ========== */
+        .promo-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+        .promo-box .promo-label {
+            font-weight: 800;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .promo-box input {
+            flex: 1;
+            min-width: 160px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: #fff;
+            outline: none;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+        }
+        .promo-box input:focus {
+            border-color: var(--accent);
+        }
+
+        /* ========== НИЖНЯЯ ПАНЕЛЬ ========== */
+        .bottom-bar {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 20px 0;
+        }
+
+        /* ========== ТОСТ ========== */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px 20px;
+            border-radius: 12px;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            max-width: 340px;
+            font-weight: 600;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.win { border-color: var(--green); }
+        .toast.lose { border-color: var(--red); }
+
+        /* ========== АВТОРИЗАЦИЯ ========== */
+        .auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 17, 21, 0.98);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .auth-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 36px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            animation: fade 0.3s ease-out;
+        }
+        .auth-box h2 {
+            color: var(--accent);
+            margin-bottom: 6px;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+        .auth-box .auth-sub {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .auth-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        .auth-tab {
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            font-weight: 700;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+        .auth-tab.active {
+            background: var(--accent);
+            color: #fff;
+        }
+        .auth-box input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .auth-box input:focus {
+            border-color: var(--accent);
+        }
+        .auth-box .btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+        .auth-error {
+            color: var(--red);
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            min-height: 1.2em;
+            text-align: center;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ЭКРАН АВТОРИЗАЦИИ / РЕГИСТРАЦИИ -->
+    <div class="auth-overlay" id="authOverlay" style="display:none;">
+        <div class="auth-box">
+            <h2>Win<span style="color:var(--accent);">play</span></h2>
+            <p class="auth-sub">Войдите или создайте аккаунт</p>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tabLoginBtn" onclick="setAuthMode('login')">Вход</button>
+                <button class="auth-tab" id="tabRegisterBtn" onclick="setAuthMode('register')">Регистрация</button>
+            </div>
+
+            <div class="auth-error" id="authError"></div>
+
+            <input type="text" id="authLogin" placeholder="Логин" autocomplete="username">
+            <input type="password" id="authPassword" placeholder="Пароль" autocomplete="current-password">
+            <input type="text" id="authNick" placeholder="Никнейм (для регистрации)" style="display:none;">
+            <input type="text" id="authRef" placeholder="Реферальный код (необязательно)" style="display:none;">
+
+            <button class="btn btn-primary" id="authSubmitBtn" onclick="submitAuth()">Войти</button>
+        </div>
+    </div>
+
+    <!-- ШАПКА -->
+    <header>
+        <div class="header-inner">
+            <a class="logo" href="index.html">Win<span>play</span></a>
+
+            <div class="user-box" id="userBox" style="display:none;">
+                <div class="balance">Баланс: <b id="balanceDisplay">0.00</b> ₽</div>
+                <a class="profile-widget" href="profile.html">
+                    <div class="avatar-mini" id="headerAvatar">👤</div>
+                    <div class="profile-id" id="headerId">#0000</div>
+                </a>
+                <button class="btn" onclick="logout()">Выйти</button>
+            </div>
+
+            <div class="user-box" id="guestBox">
+                <button class="btn btn-primary" onclick="openAuth()">Войти / Регистрация</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main>
+        <!-- ГЕРОЙ-БЛОК -->
+        <div class="hero">
+            <h1>Играй и <span>выигрывай</span></h1>
+            <p>Добро пожаловать в Winplay — платформу с честными играми, быстрыми выплатами и щедрыми бонусами. Выбирай игру и начинай прямо сейчас.</p>
+        </div>
+
+        <!-- БЫСТРЫЕ ДЕЙСТВИЯ -->
+        <div class="quick-actions">
+            <a class="action-card" href="deposit.html">
+                <div class="action-icon">💳</div>
+                <div class="action-info">
+                    <div class="title">Пополнить</div>
+                    <div class="sub">Быстрый депозит</div>
+                </div>
+            </a>
+            <a class="action-card" href="withdraw.html">
+                <div class="action-icon">💰</div>
+                <div class="action-info">
+                    <div class="title">Вывести</div>
+                    <div class="sub">Заявка на вывод</div>
+                </div>
+            </a>
+            <a class="action-card bonus-card-highlight" href="bonus.html">
+                <div class="action-icon">🎁</div>
+                <div class="action-info">
+                    <div class="title">Бонусы</div>
+                    <div class="sub">Рулетка, ТГ, промокоды</div>
+                </div>
+            </a>
+            <a class="action-card" href="profile.html">
+                <div class="action-icon">👤</div>
+                <div class="action-info">
+                    <div class="title">Профиль</div>
+                    <div class="sub">История и статистика</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- ПРОМОКОД -->
+        <div class="promo-box">
+            <div class="promo-label">🎁 Промокод:</div>
+            <input type="text" id="promoInput" placeholder="ВВЕДИТЕ КОД">
+            <button class="btn btn-green" onclick="activatePromo()">Активировать</button>
+        </div>
+
+        <!-- ИГРЫ -->
+        <div class="section-title">🎮 Игры</div>
+        <div class="games-grid" id="gamesGrid"></div>
+
+        <!-- НИЖНЯЯ ПАНЕЛЬ -->
+        <div class="bottom-bar">
+            <a class="btn btn-primary" href="bonus.html">🎁 Бонусы</a>
+            <a class="btn" href="profile.html">Мой профиль</a>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        /* ========== КЛЮЧИ ХРАНИЛИЩА ========== */
+        const U_KEY = 'roulette_users_v1';
+        const S_KEY = 'roulette_session_v1';
+        const P_KEY = 'roulette_promos_v1';
+        const G_KEY = 'roulette_game_settings_v1';
+
+        /* ========== ЗАГРУЗКА И СОХРАНЕНИЕ ========== */
+        function load(key, defaultValue) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw) {
+                    return JSON.parse(raw);
+                } else {
+                    return defaultValue;
+                }
+            } catch (error) {
+                return defaultValue;
+            }
+        }
+
+        function save(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        /* ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ========== */
+        let users = load(U_KEY, {});
+        let curUser = load(S_KEY, null);
+
+        /* ========== СПИСОК ИГР ========== */
+        const GAMES_LIST = [
+            { id: 'mines', name: 'Mines', icon: '💎', url: 'mines.html' },
+            { id: 'dice', name: 'Dice', icon: '🎲', url: 'dice.html' },
+            { id: 'tower', name: 'Tower', icon: '🗼', url: 'tower.html' },
+            { id: 'plinko', name: 'Plinko', icon: '🔴', url: 'plinko.html' },
+            { id: 'coinflip', name: 'Coinflip', icon: '🪙', url: 'coinflip.html' },
+            { id: 'roulette', name: 'Roulette', icon: '🎰', url: 'roulette.html' },
+            { id: 'upgrade', name: 'Upgrade', icon: '🚀', url: 'upgrade.html' },
+            { id: 'crash', name: 'Crash', icon: '📈', url: 'crash.html' }
+        ];
+
+        /* ========== УТИЛИТЫ ========== */
+        function showToast(text, type) {
+            if (!type) {
+                type = '';
+            }
+            const toast = document.getElementById('toast');
+            toast.textContent = text;
+            toast.className = 'toast show ' + type;
+
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function escapeHTML(str) {
+            if (!str) {
+                return '';
+            }
+            return String(str).replace(/[&<>'"]/g, function(tag) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                };
+                if (map[tag]) {
+                    return map[tag];
+                } else {
+                    return tag;
+                }
+            });
+        }
+
+        function getBal() {
+            if (!curUser) {
+                return 0;
+            }
+            if (!users[curUser]) {
+                return 0;
+            }
+            const balance = users[curUser].balance;
+            if (typeof balance === 'number') {
+                return balance;
+            } else {
+                return 0;
+            }
+        }
+
+        function setBal(value) {
+            if (!curUser) {
+                return;
+            }
+            if (!users[curUser]) {
+                return;
+            }
+
+            let newBalance = parseFloat(value.toFixed(2));
+            if (newBalance < 0) {
+                newBalance = 0;
+            }
+
+            users[curUser].balance = newBalance;
+            save(U_KEY, users);
+            refreshUI();
+        }
+
+        /* ========== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ========== */
+        function refreshUI() {
+            const userBox = document.getElementById('userBox');
+            const guestBox = document.getElementById('guestBox');
+
+            if (curUser && users[curUser]) {
+                userBox.style.display = 'flex';
+                guestBox.style.display = 'none';
+
+                const user = users[curUser];
+
+                let cleanId = String(user.id || '');
+                while (cleanId.length < 4) {
+                    cleanId = '0' + cleanId;
+                }
+
+                document.getElementById('balanceDisplay').textContent = getBal().toFixed(2);
+
+                if (user.avatar) {
+                    document.getElementById('headerAvatar').textContent = user.avatar;
+                } else {
+                    document.getElementById('headerAvatar').textContent = '👤';
+                }
+
+                document.getElementById('headerId').textContent = '#' + cleanId;
+            } else {
+                userBox.style.display = 'none';
+                guestBox.style.display = 'flex';
+            }
+        }
+
+        /* ========== АВТОРИЗАЦИЯ ========== */
+        let authMode = 'login';
+
+        function openAuth() {
+            document.getElementById('authOverlay').style.display = 'flex';
+            setAuthMode('login');
+        }
+
+        function closeAuth() {
+            document.getElementById('authOverlay').style.display = 'none';
+            document.getElementById('authError').textContent = '';
+        }
+
+        function setAuthMode(mode) {
+            authMode = mode;
+
+            const loginTab = document.getElementById('tabLoginBtn');
+            const registerTab = document.getElementById('tabRegisterBtn');
+
+            if (mode === 'login') {
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+                document.getElementById('authSubmitBtn').textContent = 'Войти';
+                document.getElementById('authNick').style.display = 'none';
+                document.getElementById('authRef').style.display = 'none';
+            } else {
+                loginTab.classList.remove('active');
+                registerTab.classList.add('active');
+                document.getElementById('authSubmitBtn').textContent = 'Зарегистрироваться';
+                document.getElementById('authNick').style.display = 'block';
+                document.getElementById('authRef').style.display = 'block';
+            }
+
+            document.getElementById('authError').textContent = '';
+        }
+
+        function submitAuth() {
+            const loginInput = document.getElementById('authLogin');
+            const passwordInput = document.getElementById('authPassword');
+            const nickInput = document.getElementById('authNick');
+            const refInput = document.getElementById('authRef');
+            const errorEl = document.getElementById('authError');
+
+            const login = loginInput.value.trim().toLowerCase();
+            const password = passwordInput.value;
+            const nick = nickInput.value.trim();
+            const ref = refInput.value.trim();
+
+            errorEl.textContent = '';
+
+            if (!login) {
+                errorEl.textContent = 'Введите логин';
+                return;
+            }
+
+            if (login.length < 3) {
+                errorEl.textContent = 'Логин должен быть не короче 3 символов';
+                return;
+            }
+
+            if (!password) {
+                errorEl.textContent = 'Введите пароль';
+                return;
+            }
+
+            if (password.length < 3) {
+                errorEl.textContent = 'Пароль должен быть не короче 3 символов';
+                return;
+            }
+
+            users = load(U_KEY, {});
+
+            if (authMode === 'login') {
+                performLogin(login, password, errorEl);
+            } else {
+                performRegister(login, password, nick, ref, errorEl);
+            }
+        }
+
+        function performLogin(login, password, errorEl) {
+            if (!users[login]) {
+                errorEl.textContent = 'Пользователь не найден';
+                return;
+            }
+
+            if (users[login].password !== password) {
+                errorEl.textContent = 'Неверный пароль';
+                return;
+            }
+
+            if (users[login].isBlocked) {
+                let reason = users[login].blockReason;
+                if (!reason) {
+                    reason = 'причина не указана';
+                }
+                errorEl.textContent = 'Аккаунт заблокирован: ' + reason;
+                return;
+            }
+
+            save(S_KEY, login);
+            curUser = login;
+
+            closeAuth();
+            refreshUI();
+
+            let displayName = users[login].nick;
+            if (!displayName) {
+                displayName = login;
+            }
+            showToast('С возвращением, ' + displayName + '!', 'win');
+        }
+
+        function performRegister(login, password, nick, ref, errorEl) {
+            if (users[login]) {
+                errorEl.textContent = 'Такой логин уже занят';
+                return;
+            }
+
+            if (!nick) {
+                errorEl.textContent = 'Введите никнейм';
+                return;
+            }
+
+            let newId = Object.keys(users).length + 1;
+
+            const avatars = ['👤', '😎', '🦊', '🐺', '🦁', '🐯', '🐸', '🐼', '🦄', '🐉'];
+            const avatarIndex = Math.floor(Math.random() * avatars.length);
+            const avatar = avatars[avatarIndex];
+
+            users[login] = {
+                id: newId,
+                nick: nick,
+                avatar: avatar,
+                password: password,
+                balance: 0,
+                totalDeposited: 0,
+                totalBets: 0,
+                wagerRequired: 0,
+                wagerProgress: 0,
+                isBlocked: false,
+                blockReason: '',
+                referrer: null,
+                referrals: [],
+                refEarned: 0,
+                history: [],
+                usedPromos: [],
+                vipLevel: 0,
+                tgBonusClaimed: false,
+                lastSpinTime: null,
+                activePromo: null
+            };
+
+            if (ref) {
+                const refLogin = ref.toLowerCase();
+                if (users[refLogin] && refLogin !== login) {
+                    users[login].referrer = refLogin;
+
+                    if (!users[refLogin].referrals) {
+                        users[refLogin].referrals = [];
+                    }
+                    users[refLogin].referrals.push(login);
+                }
+            }
+
+            save(U_KEY, users);
+            save(S_KEY, login);
+            curUser = login;
+
+            closeAuth();
+            refreshUI();
+
+            showToast('Аккаунт создан! Добро пожаловать, ' + nick + '!', 'win');
+        }
+
+        function logout() {
+            if (!confirm('Выйти из аккаунта?')) {
+                return;
+            }
+
+            localStorage.removeItem(S_KEY);
+            curUser = null;
+            refreshUI();
+            showToast('Вы вышли из аккаунта', '');
+        }
+
+        /* ========== ПРОМОКОДЫ ========== */
+        function activatePromo() {
+            if (!curUser) {
+                showToast('Сначала войдите в аккаунт', 'lose');
+                return;
+            }
+
+            if (!users[curUser]) {
+                showToast('Сначала войдите в аккаунт', 'lose');
+                return;
+            }
+
+            const input = document.getElementById('promoInput');
+            const code = input.value.trim().toUpperCase();
+
+            if (!code) {
+                showToast('Введите промокод', 'lose');
+                return;
+            }
+
+            let userPromos = users[curUser].usedPromos;
+            if (!userPromos) {
+                userPromos = [];
+            }
+
+            if (userPromos.indexOf(code) !== -1) {
+                showToast('Вы уже активировали этот промокод', 'lose');
+                return;
+            }
+
+            const promos = load(P_KEY, {});
+            const promo = promos[code];
+
+            if (!promo) {
+                showToast('Промокод не найден', 'lose');
+                return;
+            }
+
+            let usedCount = promo.used || 0;
+            if (usedCount >= promo.limit) {
+                showToast('Лимит активаций исчерпан', 'lose');
+                return;
+            }
+
+            if (promo.type === 'fixed') {
+                const currentBalance = getBal();
+                setBal(currentBalance + promo.amount);
+                showToast('🎁 +' + promo.amount.toFixed(2) + ' ₽ по промокоду!', 'win');
+            } else if (promo.type === 'percent') {
+                showToast('Этот промокод активируется на странице «Бонусы»', 'lose');
+                return;
+            }
+
+            userPromos.push(code);
+            users[curUser].usedPromos = userPromos;
+            save(U_KEY, users);
+
+            usedCount = usedCount + 1;
+            promo.used = usedCount;
+            save(P_KEY, promos);
+
+            input.value = '';
+        }
+
+        /* ========== РЕНДЕР ИГР ========== */
+        function renderGames() {
+            const settings = load(G_KEY, {});
+            const grid = document.getElementById('gamesGrid');
+
+            let html = '';
+
+            for (let i = 0; i < GAMES_LIST.length; i++) {
+                const game = GAMES_LIST[i];
+                const gameSettings = settings[game.id];
+
+                let isDisabled = false;
+                if (gameSettings) {
+                    if (gameSettings.enabled === false) {
+                        isDisabled = true;
+                    }
+                }
+
+                if (isDisabled) {
+                    html += '<div class="game-card disabled">';
+                    html += '<div class="game-badge">Перерыв</div>';
+                    html += '<div class="game-icon">' + game.icon + '</div>';
+                    html += '<div class="game-name">' + game.name + '</div>';
+                    html += '</div>';
+                } else {
+                    html += '<a class="game-card" href="' + game.url + '">';
+                    html += '<div class="game-icon">' + game.icon + '</div>';
+                    html += '<div class="game-name">' + game.name + '</div>';
+                    html += '</a>';
+                }
+            }
+
+            grid.innerHTML = html;
+        }
+
+        /* ========== ИНИЦИАЛИЗАЦИЯ ========== */
+        function init() {
+            users = load(U_KEY, {});
+            curUser = load(S_KEY, null);
+
+            if (curUser) {
+                if (!users[curUser]) {
+                    curUser = null;
+                    localStorage.removeItem(S_KEY);
+                }
+            }
+
+            refreshUI();
+            renderGames();
+
+            if (!curUser) {
+                openAuth();
+            }
+        }
+
+        init();
+
+        /* ========== ОБРАБОТЧИКИ СОБЫТИЙ ========== */
+        const authOverlay = document.getElementById('authOverlay');
+
+        authOverlay.addEventListener('click', function(event) {
+            if (event.target === authOverlay) {
+                if (curUser) {
+                    closeAuth();
+                }
+            }
+        });
+
+        const authFieldIds = ['authLogin', 'authPassword', 'authNick', 'authRef'];
+
+        for (let i = 0; i < authFieldIds.length; i++) {
+            const fieldId = authFieldIds[i];
+            const field = document.getElementById(fieldId);
+
+            field.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    submitAuth();
+                }
+            });
+        }
+
+        const promoInput = document.getElementById('promoInput');
+
+        promoInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                activatePromo();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- Подключаем официальный SDK Telegram -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<script>
+    // Ждём, пока SDK загрузится
+    window.addEventListener('load', function() {
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            
+            // Сообщаем Telegram, что приложение готово
+            tg.ready();
+            
+            // Разворачиваем приложение на весь экран (убирает лишние отступы)
+            tg.expand();
+
+            // (Опционально) Можно получить данные пользователя Telegram
+            // const user = tg.initDataUnsafe.user;
+            // console.log('Пользователь:', user);
+        } else {
+            console.log('Приложение открыто вне Telegram');
+        }
+    });
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль | Winplay</title>
+    <style>
+        :root {
+            --bg: #0f1115;
+            --card: #1c1f26;
+            --text: #e6e8ee;
+            --muted: #8b92a5;
+            --border: #2a2e39;
+            --accent: #5b8cff;
+            --gold: #ffd166;
+            --green: #22c55e;
+            --red: #ef4444;
+            --bronze: #cd7f32;
+            --silver: #c0c0c0;
+            --diamond: #67e8f9;
+            --platinum: #e5e7eb;
+            --obsidian: #a78bfa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========== ШАПКА ========== */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 17, 21, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.4rem;
+            color: #fff;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+        .logo span { color: var(--accent); }
+
+        .user-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .balance {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .balance b { color: var(--gold); }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: #252932;
+            transform: translateY(-1px);
+        }
+        .btn-primary {
+            background: var(--accent);
+            border: none;
+            color: #fff;
+        }
+        .btn-primary:hover { background: #4a7aff; }
+        .btn-green {
+            background: var(--green);
+            border: none;
+            color: #fff;
+        }
+        .btn-green:hover { background: #16a34a; }
+        .btn-red {
+            background: var(--red);
+            border: none;
+            color: #fff;
+        }
+        .btn-red:hover { background: #dc2626; }
+
+        .profile-widget {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--card);
+            padding: 4px 12px 4px 4px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: var(--text);
+        }
+        .profile-widget:hover { border-color: var(--accent); }
+        .avatar-mini {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .profile-id {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        /* ========== ОСНОВНОЙ КОНТЕНТ ========== */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .back-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .back-btn:hover { color: #fff; border-color: #fff; }
+
+        /* ========== КАРТОЧКА ПРОФИЛЯ ========== */
+        .profile-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 28px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            animation: fade 0.3s ease-out;
+        }
+
+        .profile-avatar {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            flex-shrink: 0;
+        }
+
+        .profile-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .profile-info .nick {
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
+
+        .profile-info .uid {
+            font-size: 0.9rem;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .profile-info .status-line {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .status-active { color: var(--green); }
+        .status-blocked { color: var(--red); }
+
+        .profile-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* ========== СТАТИСТИКА ========== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            animation: fade 0.3s ease-out;
+        }
+
+        .stat-card .lbl {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .stat-card .val {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .stat-card .val.gold { color: var(--gold); }
+        .stat-card .val.green { color: var(--green); }
+        .stat-card .val.accent { color: var(--accent); }
+
+        /* ========== СЕКЦИИ ========== */
+        .section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            animation: fade 0.3s ease-out;
+        }
+
+        .section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ========== VIP ========== */
+        .vip-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            position: relative;
+            overflow: hidden;
+        }
+        .vip-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--gold));
+        }
+        .vip-card.current::before {
+            background: var(--gold);
+        }
+        .vip-icon {
+            font-size: 2.6rem;
+            width: 72px;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            flex-shrink: 0;
+        }
+        .vip-info {
+            flex: 1;
+            min-width: 200px;
+        }
+        .vip-info .vip-level-name {
+            font-size: 1.2rem;
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
+        .vip-info .vip-level-desc {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+        .vip-perks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .vip-perk {
+            padding: 3px 10px;
+            background: rgba(91, 140, 255, 0.15);
+            border: 1px solid rgba(91, 140, 255, 0.3);
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 6px;
+        }
+        .vip-progress-block {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .vip-progress-block .block-title {
+            font-size: 0.85rem;
+            color: var(--muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+        .vip-progress-item {
+            margin-bottom: 14px;
+        }
+        .vip-progress-item:last-child {
+            margin-bottom: 0;
+        }
+        .vip-progress-item .lbl-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .vip-progress-item .lbl-row .lbl { color: var(--muted); }
+        .vip-progress-item .lbl-row .val { color: var(--gold); }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: var(--card);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #4a7aff);
+            transition: width 0.4s ease-out;
+            border-radius: 6px;
+        }
+        .progress-fill.vip {
+            background: linear-gradient(90deg, var(--gold), #f59e0b);
+        }
+
+        .vip-levels-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 10px;
+        }
+        .vip-level-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0.55;
+        }
+        .vip-level-item.reached {
+            opacity: 1;
+            border-color: rgba(91, 140, 255, 0.3);
+        }
+        .vip-level-item.current-level {
+            opacity: 1;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 1px var(--gold);
+        }
+        .vip-level-item .mini-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        .vip-level-item .mini-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .vip-level-item .mini-info .mini-name {
+            font-weight: 800;
+            font-size: 0.95rem;
+        }
+        .vip-level-item .mini-info .mini-req {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        /* ========== ВЕЙДЖЕР ========== */
+        .wager-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .wager-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .wager-info .lbl {
+            font-size: 0.9rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .wager-info .val {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--gold);
+        }
+
+        /* ========== РЕФЕРАЛЫ ========== */
+        .ref-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .ref-link-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .ref-link-row input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: #fff;
+            outline: none;
+            font-size: 0.9rem;
+            font-family: monospace;
+        }
+
+        .ref-stats {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .ref-stat {
+            text-align: center;
+        }
+
+        .ref-stat .lbl {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .ref-stat .val {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: var(--green);
+        }
+
+        /* ========== ТАБЛИЦА ИСТОРИИ ========== */
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .hist-type {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .hist-type.bet {
+            background: rgba(91, 140, 255, 0.2);
+            color: var(--accent);
+        }
+        .hist-type.win {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--green);
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: var(--muted);
+            padding: 30px;
+            font-size: 0.95rem;
+        }
+
+        /* ========== ТОСТ ========== */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px 20px;
+            border-radius: 12px;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            max-width: 340px;
+            font-weight: 600;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.win { border-color: var(--green); }
+        .toast.lose { border-color: var(--red); }
+
+        @media (max-width: 768px) {
+            .profile-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            .profile-actions {
+                justify-content: center;
+                width: 100%;
+            }
+            .ref-stats {
+                justify-content: center;
+            }
+            .vip-card {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ШАПКА -->
+    <header>
+        <div class="header-inner">
+            <a class="logo" href="index.html">Win<span>play</span></a>
+
+            <div class="user-box" id="userBox" style="display:none;">
+                <div class="balance">Баланс: <b id="balanceDisplay">0.00</b> ₽</div>
+                <a class="profile-widget" href="profile.html">
+                    <div class="avatar-mini" id="headerAvatar">👤</div>
+                    <div class="profile-id" id="headerId">#0000</div>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main>
+        <div class="game-header">
+            <a class="back-btn" href="index.html">← В лобби</a>
+            <h2>👤 Мой профиль</h2>
+        </div>
+
+        <!-- КАРТОЧКА ПРОФИЛЯ -->
+        <div class="profile-card">
+            <div class="profile-avatar" id="bigAvatar">👤</div>
+
+            <div class="profile-info">
+                <div class="nick" id="profileNick">—</div>
+                <div class="uid" id="profileUid">#0000</div>
+                <div class="status-line" id="profileStatus">—</div>
+            </div>
+
+            <div class="profile-actions">
+                <a class="btn btn-green" href="deposit.html">💳 Пополнить</a>
+                <a class="btn btn-primary" href="withdraw.html">💰 Вывести</a>
+                <button class="btn btn-red" onclick="logout()">Выйти</button>
+            </div>
+        </div>
+
+        <!-- СТАТИСТИКА -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="lbl">Баланс</div>
+                <div class="val gold" id="statBalance">0.00 ₽</div>
+            </div>
+            <div class="stat-card">
+                <div class="lbl">Всего депозитов</div>
+                <div class="val green" id="statDeposited">0.00 ₽</div>
+            </div>
+            <div class="stat-card">
+                <div class="lbl">Всего ставок</div>
+                <div class="val accent" id="statBets">0.00 ₽</div>
+            </div>
+            <div class="stat-card">
+                <div class="lbl">Реферальный доход</div>
+                <div class="val" id="statRefEarned">0.00 ₽</div>
+            </div>
+        </div>
+
+        <!-- VIP ПРОГРАММА -->
+        <div class="section">
+            <h2>👑 VIP программа</h2>
+
+            <!-- Текущий уровень -->
+            <div class="vip-card current" id="vipCurrentCard">
+                <div class="vip-icon" id="vipCurrentIcon">⚪</div>
+                <div class="vip-info">
+                    <div class="vip-level-name" id="vipCurrentName">Новичок</div>
+                    <div class="vip-level-desc" id="vipCurrentDesc">Пока нет VIP-статуса</div>
+                    <div class="vip-perks" id="vipCurrentPerks"></div>
+                </div>
+            </div>
+
+            <!-- Прогресс до следующего уровня -->
+            <div class="vip-progress-block" id="vipProgressBlock">
+                <div class="block-title" id="vipNextTitle">До следующего уровня</div>
+
+                <div class="vip-progress-item">
+                    <div class="lbl-row">
+                        <span class="lbl">Ставки</span>
+                        <span class="val" id="vipBetsVal">0.00 / 0.00 ₽</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill vip" id="vipBetsBar" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <div class="vip-progress-item">
+                    <div class="lbl-row">
+                        <span class="lbl">Депозиты</span>
+                        <span class="val" id="vipDepVal">0.00 / 0.00 ₽</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill vip" id="vipDepBar" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Все уровни -->
+            <div class="vip-levels-list" id="vipLevelsList"></div>
+        </div>
+
+        <!-- ВЕЙДЖЕР -->
+        <div class="section" id="wagerSection" style="display:none;">
+            <h2>🔄 Активный вейджер</h2>
+            <div class="wager-box">
+                <div class="wager-info">
+                    <span class="lbl">Отыграно / Требуется</span>
+                    <span class="val" id="wagerText">0.00 / 0.00 ₽</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="wagerProgressBar" style="width:0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- РЕФЕРАЛЫ -->
+        <div class="section">
+            <h2>👥 Реферальная программа</h2>
+            <div class="ref-box">
+                <div class="ref-link-row">
+                    <input type="text" id="refLinkInput" readonly>
+                    <button class="btn btn-primary" onclick="copyRefLink()">Копировать</button>
+                </div>
+                <div class="ref-stats">
+                    <div class="ref-stat">
+                        <div class="lbl">Приглашено</div>
+                        <div class="val" id="refCount">0</div>
+                    </div>
+                    <div class="ref-stat">
+                        <div class="lbl">Заработано</div>
+                        <div class="val" id="refEarned">0.00 ₽</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ИСТОРИЯ -->
+        <div class="section">
+            <h2>📜 История операций</h2>
+            <div class="table-wrap">
+                <table id="tHistory">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тип</th>
+                            <th>Сумма</th>
+                            <th>Описание</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        /* ========== КЛЮЧИ ХРАНИЛИЩА ========== */
+        const U_KEY = 'roulette_users_v1';
+        const S_KEY = 'roulette_session_v1';
+
+        /* ========== ЗАГРУЗКА И СОХРАНЕНИЕ ========== */
+        function load(key, defaultValue) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw) {
+                    return JSON.parse(raw);
+                } else {
+                    return defaultValue;
+                }
+            } catch (error) {
+                return defaultValue;
+            }
+        }
+
+        function save(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        /* ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ========== */
+        let users = load(U_KEY, {});
+        let curUser = load(S_KEY, null);
+
+        /* ========== ПРОВЕРКА АВТОРИЗАЦИИ ========== */
+        if (!curUser) {
+            location.href = 'index.html';
+        }
+
+        if (!users[curUser]) {
+            localStorage.removeItem(S_KEY);
+            location.href = 'index.html';
+        }
+
+        /* ========== VIP УРОВНИ ========== */
+        // Уровень 0 — базовый (без привилегий), не показывается как VIP
+        // Уровень 3 (Золото): пороги взяты усреднённо между Серебром и Алмазом,
+        // так как в исходном описании они не были указаны.
+        const VIP_LEVELS = [
+            {
+                level: 0,
+                name: 'Новичок',
+                icon: '⚪',
+                color: '#8b92a5',
+                bonus: 0,
+                rakeback: 0,
+                cashback: 0,
+                minBets: 0,
+                minDep: 0,
+                perks: []
+            },
+            {
+                level: 1,
+                name: 'Бронза',
+                icon: '🥉',
+                color: '#cd7f32',
+                bonus: 50,
+                rakeback: 10,
+                cashback: 0,
+                minBets: 3000,
+                minDep: 1000,
+                perks: ['Рейкбэк 10%']
+            },
+            {
+                level: 2,
+                name: 'Серебро',
+                icon: '🥈',
+                color: '#c0c0c0',
+                bonus: 150,
+                rakeback: 10,
+                cashback: 10,
+                minBets: 15000,
+                minDep: 3000,
+                perks: ['Рейкбэк 10%', 'Кешбэк до 10%']
+            },
+            {
+                level: 3,
+                name: 'Золото',
+                icon: '🥇',
+                color: '#ffd166',
+                bonus: 500,
+                rakeback: 10,
+                cashback: 10,
+                minBets: 20000,
+                minDep: 4500,
+                perks: ['Рейкбэк 10% от house edge', 'Кешбэк до 10%', 'Ежемесячный буст']
+            },
+            {
+                level: 4,
+                name: 'Алмаз',
+                icon: '💎',
+                color: '#67e8f9',
+                bonus: 1000,
+                rakeback: 10,
+                cashback: 10,
+                minBets: 25000,
+                minDep: 6000,
+                perks: ['Рейкбэк 10%', 'Кешбэк до 10%', 'Повышенный ежемесячный буст']
+            },
+            {
+                level: 5,
+                name: 'Платина',
+                icon: '💠',
+                color: '#e5e7eb',
+                bonus: 2000,
+                rakeback: 10,
+                cashback: 10,
+                minBets: 50000,
+                minDep: 15000,
+                perks: ['Рейкбэк 10%', 'Кешбэк до 10%', 'Повышенный ежемесячный буст', 'Персональный VIP-менеджер']
+            },
+            {
+                level: 6,
+                name: 'Обсидиан',
+                icon: '🖤',
+                color: '#a78bfa',
+                bonus: 5000,
+                rakeback: 15,
+                cashback: 15,
+                minBets: 100000,
+                minDep: 50000,
+                perks: ['Повышенный рейкбэк 15%', 'Повышенный кешбэк до 15%', 'Повышенный ежемесячный буст', 'Персональный VIP-менеджер']
+            }
+        ];
+
+        /* ========== УТИЛИТЫ ========== */
+        function showToast(text, type) {
+            if (!type) {
+                type = '';
+            }
+            const toast = document.getElementById('toast');
+            toast.textContent = text;
+            toast.className = 'toast show ' + type;
+
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        function escapeHTML(str) {
+            if (!str) {
+                return '';
+            }
+            return String(str).replace(/[&<>'"]/g, function(tag) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                };
+                if (map[tag]) {
+                    return map[tag];
+                } else {
+                    return tag;
+                }
+            });
+        }
+
+        function formatMoney(value) {
+            let num = parseFloat(value);
+            if (isNaN(num)) {
+                num = 0;
+            }
+            return num.toFixed(2);
+        }
+
+        function formatId(id) {
+            let cleanId = String(id || '');
+            while (cleanId.length < 4) {
+                cleanId = '0' + cleanId;
+            }
+            return '#' + cleanId;
+        }
+
+        /* ========== РАСЧЁТ VIP УРОВНЯ ========== */
+        function computeVipLevel(user) {
+            const bets = user.totalBets || 0;
+            const dep = user.totalDeposited || 0;
+
+            // Идём от высшего уровня к низшему
+            for (let i = VIP_LEVELS.length - 1; i >= 1; i--) {
+                const lvlData = VIP_LEVELS[i];
+                if (bets >= lvlData.minBets && dep >= lvlData.minDep) {
+                    return lvlData.level;
+                }
+            }
+            return 0;
+        }
+
+        /* ========== ПРОВЕРКА И ВЫДАЧА VIP БОНУСА ========== */
+        function checkAndAwardVip(user) {
+            const computedLevel = computeVipLevel(user);
+            const storedLevel = user.vipLevel || 0;
+            let result = { leveledUp: false, newLevel: storedLevel, bonus: 0 };
+
+            if (computedLevel > storedLevel) {
+                let totalBonus = 0;
+                let names = [];
+
+                for (let i = storedLevel + 1; i <= computedLevel; i++) {
+                    const lvlData = VIP_LEVELS[i];
+                    if (lvlData) {
+                        if (lvlData.bonus > 0) {
+                            totalBonus += lvlData.bonus;
+                        }
+                        names.push(lvlData.name);
+                    }
+                }
+
+                if (totalBonus > 0) {
+                    user.balance = (user.balance || 0) + totalBonus;
+
+                    if (!user.history) {
+                        user.history = [];
+                    }
+
+                    user.history.unshift({
+                        type: 'win',
+                        amount: totalBonus,
+                        date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                        details: 'VIP бонус: ' + names.join(', ')
+                    });
+
+                    if (user.history.length > 20) {
+                        user.history.pop();
+                    }
+                }
+
+                user.vipLevel = computedLevel;
+                result.leveledUp = true;
+                result.newLevel = computedLevel;
+                result.bonus = totalBonus;
+                result.names = names;
+            } else if (computedLevel !== storedLevel) {
+                // На случай если сохранённый уровень выше вычисленного (ручная выдача)
+                user.vipLevel = computedLevel;
+            }
+
+            // Гарантируем что поле существует
+            if (typeof user.vipLevel !== 'number') {
+                user.vipLevel = computedLevel;
+            }
+
+            save(U_KEY, users);
+            return result;
+        }
+
+        /* ========== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ========== */
+        function refreshUI() {
+            users = load(U_KEY, {});
+            const user = users[curUser];
+
+            if (!user) {
+                location.href = 'index.html';
+                return;
+            }
+
+            // Шапка
+            document.getElementById('userBox').style.display = 'flex';
+            document.getElementById('balanceDisplay').textContent = formatMoney(user.balance);
+
+            if (user.avatar) {
+                document.getElementById('headerAvatar').textContent = user.avatar;
+            } else {
+                document.getElementById('headerAvatar').textContent = '👤';
+            }
+
+            document.getElementById('headerId').textContent = formatId(user.id);
+
+            // Карточка профиля
+            if (user.avatar) {
+                document.getElementById('bigAvatar').textContent = user.avatar;
+            } else {
+                document.getElementById('bigAvatar').textContent = '👤';
+            }
+
+            if (user.nick) {
+                document.getElementById('profileNick').textContent = user.nick;
+            } else {
+                document.getElementById('profileNick').textContent = curUser;
+            }
+
+            document.getElementById('profileUid').textContent = formatId(user.id);
+
+            const statusEl = document.getElementById('profileStatus');
+
+            if (user.isBlocked) {
+                statusEl.className = 'status-line status-blocked';
+                let reason = user.blockReason;
+                if (!reason) {
+                    reason = 'причина не указана';
+                }
+                statusEl.textContent = '🚫 Заблокирован: ' + reason;
+            } else {
+                statusEl.className = 'status-line status-active';
+                statusEl.textContent = '✅ Аккаунт активен';
+            }
+
+            // Статистика
+            document.getElementById('statBalance').textContent = formatMoney(user.balance) + ' ₽';
+            document.getElementById('statDeposited').textContent = formatMoney(user.totalDeposited) + ' ₽';
+            document.getElementById('statBets').textContent = formatMoney(user.totalBets) + ' ₽';
+            document.getElementById('statRefEarned').textContent = formatMoney(user.refEarned) + ' ₽';
+
+            // VIP
+            renderVip(user);
+
+            // Вейджер
+            renderWager(user);
+
+            // Рефералы
+            renderReferrals(user);
+
+            // История
+            renderHistory(user);
+        }
+
+        /* ========== РЕНДЕР VIP ========== */
+        function renderVip(user) {
+            const currentLevel = user.vipLevel || 0;
+            const currentData = VIP_LEVELS[currentLevel];
+
+            // Иконка и название текущего уровня
+            document.getElementById('vipCurrentIcon').textContent = currentData.icon;
+            document.getElementById('vipCurrentName').textContent = currentData.name;
+
+            if (currentLevel === 0) {
+                document.getElementById('vipCurrentDesc').textContent = 'Пока нет VIP-статуса. Делайте ставки и депозиты, чтобы получить Бронзу.';
+            } else {
+                document.getElementById('vipCurrentDesc').textContent = 'Уровень ' + currentLevel + ' из ' + (VIP_LEVELS.length - 1);
+            }
+
+            // Привилегии текущего уровня
+            const perksEl = document.getElementById('vipCurrentPerks');
+            let perksHtml = '';
+
+            if (currentData.perks.length === 0) {
+                perksEl.innerHTML = '';
+            } else {
+                for (let i = 0; i < currentData.perks.length; i++) {
+                    perksHtml += '<span class="vip-perk">' + escapeHTML(currentData.perks[i]) + '</span>';
+                }
+                perksEl.innerHTML = perksHtml;
+            }
+
+            // Прогресс до следующего уровня
+            const nextLevel = currentLevel < VIP_LEVELS.length - 1 ? VIP_LEVELS[currentLevel + 1] : null;
+            const progressBlock = document.getElementById('vipProgressBlock');
+
+            if (!nextLevel) {
+                progressBlock.style.display = 'none';
+            } else {
+                progressBlock.style.display = 'block';
+                document.getElementById('vipNextTitle').textContent = 'До уровня «' + nextLevel.name + '»';
+
+                const bets = user.totalBets || 0;
+                const dep = user.totalDeposited || 0;
+
+                document.getElementById('vipBetsVal').textContent =
+                    formatMoney(bets) + ' / ' + formatMoney(nextLevel.minBets) + ' ₽';
+                document.getElementById('vipDepVal').textContent =
+                    formatMoney(dep) + ' / ' + formatMoney(nextLevel.minDep) + ' ₽';
+
+                let betsPercent = 0;
+                if (nextLevel.minBets > 0) {
+                    betsPercent = (bets / nextLevel.minBets) * 100;
+                }
+                let depPercent = 0;
+                if (nextLevel.minDep > 0) {
+                    depPercent = (dep / nextLevel.minDep) * 100;
+                }
+                if (betsPercent > 100) betsPercent = 100;
+                if (depPercent > 100) depPercent = 100;
+                if (betsPercent < 0) betsPercent = 0;
+                if (depPercent < 0) depPercent = 0;
+
+                document.getElementById('vipBetsBar').style.width = betsPercent.toFixed(1) + '%';
+                document.getElementById('vipDepBar').style.width = depPercent.toFixed(1) + '%';
+            }
+
+            // Список всех уровней
+            const listEl = document.getElementById('vipLevelsList');
+            let listHtml = '';
+
+            for (let i = 1; i < VIP_LEVELS.length; i++) {
+                const lvl = VIP_LEVELS[i];
+                let cls = 'vip-level-item';
+
+                if (i < currentLevel) {
+                    cls += ' reached';
+                } else if (i === currentLevel) {
+                    cls += ' current-level';
+                }
+
+                let reqStr = 'от ' + formatMoney(lvl.minBets) + ' ₽ / ' + formatMoney(lvl.minDep) + ' ₽';
+
+                listHtml += '<div class="' + cls + '">';
+                listHtml += '<div class="mini-icon">' + lvl.icon + '</div>';
+                listHtml += '<div class="mini-info">';
+                listHtml += '<div class="mini-name">' + lvl.name + '</div>';
+                listHtml += '<div class="mini-req">' + reqStr + '</div>';
+                listHtml += '</div>';
+                listHtml += '</div>';
+            }
+
+            listEl.innerHTML = listHtml;
+        }
+
+        /* ========== ВЕЙДЖЕР ========== */
+        function renderWager(user) {
+            const wagerSection = document.getElementById('wagerSection');
+            const wagerRequired = user.wagerRequired || 0;
+
+            if (wagerRequired <= 0) {
+                wagerSection.style.display = 'none';
+                return;
+            }
+
+            wagerSection.style.display = 'block';
+
+            const wagerProgress = user.wagerProgress || 0;
+
+            document.getElementById('wagerText').textContent =
+                formatMoney(wagerProgress) + ' / ' + formatMoney(wagerRequired) + ' ₽';
+
+            let percent = 0;
+            if (wagerRequired > 0) {
+                percent = (wagerProgress / wagerRequired) * 100;
+            }
+
+            if (percent > 100) {
+                percent = 100;
+            }
+
+            if (percent < 0) {
+                percent = 0;
+            }
+
+            document.getElementById('wagerProgressBar').style.width = percent.toFixed(1) + '%';
+        }
+
+        /* ========== РЕФЕРАЛЫ ========== */
+        function renderReferrals(user) {
+            const protocol = window.location.protocol;
+            const host = window.location.host;
+            const pathname = window.location.pathname;
+            const dir = pathname.substring(0, pathname.lastIndexOf('/') + 1);
+
+            let baseUrl = protocol + '//' + host + dir;
+            const refLink = baseUrl + 'index.html?ref=' + encodeURIComponent(curUser);
+
+            document.getElementById('refLinkInput').value = refLink;
+
+            let referralsArray = user.referrals;
+            if (!referralsArray) {
+                referralsArray = [];
+            }
+
+            document.getElementById('refCount').textContent = referralsArray.length;
+            document.getElementById('refEarned').textContent = formatMoney(user.refEarned) + ' ₽';
+        }
+
+        function copyRefLink() {
+            const input = document.getElementById('refLinkInput');
+            input.select();
+            input.setSelectionRange(0, 99999);
+
+            const text = input.value;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    showToast('Ссылка скопирована!', 'win');
+                }).catch(function() {
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+                showToast('Ссылка скопирована!', 'win');
+            } catch (error) {
+                showToast('Не удалось скопировать', 'lose');
+            }
+
+            document.body.removeChild(textarea);
+        }
+
+        /* ========== ИСТОРИЯ ========== */
+        function renderHistory(user) {
+            const tbody = document.querySelector('#tHistory tbody');
+
+            let historyArray = user.history;
+            if (!historyArray) {
+                historyArray = [];
+            }
+
+            if (historyArray.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">История пуста</td></tr>';
+                return;
+            }
+
+            let html = '';
+
+            for (let i = 0; i < historyArray.length; i++) {
+                const item = historyArray[i];
+
+                let typeClass = 'bet';
+                let typeLabel = 'Ставка';
+
+                if (item.type === 'win') {
+                    typeClass = 'win';
+                    typeLabel = 'Выигрыш';
+                }
+
+                let dateStr = item.date;
+                if (!dateStr) {
+                    dateStr = '—';
+                }
+
+                let amountStr = '—';
+                if (typeof item.amount === 'number') {
+                    amountStr = formatMoney(item.amount) + ' ₽';
+                }
+
+                let detailsStr = item.details;
+                if (!detailsStr) {
+                    detailsStr = '—';
+                }
+
+                html += '<tr>';
+                html += '<td>' + escapeHTML(dateStr) + '</td>';
+                html += '<td><span class="hist-type ' + typeClass + '">' + typeLabel + '</span></td>';
+                html += '<td><b>' + escapeHTML(amountStr) + '</b></td>';
+                html += '<td>' + escapeHTML(detailsStr) + '</td>';
+                html += '</tr>';
+            }
+
+            tbody.innerHTML = html;
+        }
+
+        /* ========== ВЫХОД ========== */
+        function logout() {
+            if (!confirm('Выйти из аккаунта?')) {
+                return;
+            }
+
+            localStorage.removeItem(S_KEY);
+            location.href = 'index.html';
+        }
+
+        /* ========== ИНИЦИАЛИЗАЦИЯ ========== */
+        function init() {
+            // Сначала проверяем и выдаём VIP-бонус (если уровень повысился)
+            const user = users[curUser];
+            if (user) {
+                const vipResult = checkAndAwardVip(user);
+                refreshUI();
+
+                if (vipResult.leveledUp && vipResult.bonus > 0) {
+                    const newLevelName = VIP_LEVELS[vipResult.newLevel].name;
+                    showToast('🎉 Новый VIP уровень: ' + newLevelName + '! Бонус +' + formatMoney(vipResult.bonus) + ' ₽', 'win');
+                }
+            } else {
+                refreshUI();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

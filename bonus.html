@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- Подключаем официальный SDK Telegram -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<script>
+    // Ждём, пока SDK загрузится
+    window.addEventListener('load', function() {
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            
+            // Сообщаем Telegram, что приложение готово
+            tg.ready();
+            
+            // Разворачиваем приложение на весь экран (убирает лишние отступы)
+            tg.expand();
+
+            // (Опционально) Можно получить данные пользователя Telegram
+            // const user = tg.initDataUnsafe.user;
+            // console.log('Пользователь:', user);
+        } else {
+            console.log('Приложение открыто вне Telegram');
+        }
+    });
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бонусы | Winplay</title>
+    <style>
+        :root {
+            --bg: #0f1115;
+            --card: #1c1f26;
+            --text: #e6e8ee;
+            --muted: #8b92a5;
+            --border: #2a2e39;
+            --accent: #5b8cff;
+            --gold: #ffd166;
+            --green: #22c55e;
+            --red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========== ШАПКА ========== */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 17, 21, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.4rem;
+            color: #fff;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+        .logo span { color: var(--accent); }
+
+        .user-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .balance {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .balance b { color: var(--gold); }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: #252932;
+            transform: translateY(-1px);
+        }
+        .btn-primary {
+            background: var(--accent);
+            border: none;
+            color: #fff;
+        }
+        .btn-primary:hover { background: #4a7aff; }
+
+        .profile-widget {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--card);
+            padding: 4px 12px 4px 4px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: var(--text);
+        }
+        .profile-widget:hover { border-color: var(--accent); }
+        .avatar-mini {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .profile-id {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        /* ========== ОСНОВНОЙ КОНТЕНТ ========== */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .back-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .back-btn:hover { color: #fff; border-color: #fff; }
+
+        /* ========== СЕТКА БОНУСОВ ========== */
+        .bonus-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            animation: fade 0.3s ease-out;
+        }
+
+        .bonus-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bonus-card h2 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* РУЛЕТКА */
+        .wheel-wrapper {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(0,0,0,0.6);
+            border: 4px solid var(--border);
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1);
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid var(--gold);
+            z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .spin-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ffd166, #f59e0b);
+            color: #111;
+            font-size: 1.1rem;
+            font-weight: 900;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(255, 209, 102, 0.3);
+            transition: all 0.2s;
+            margin-top: auto;
+        }
+        .spin-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+        .spin-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: var(--border);
+            box-shadow: none;
+            transform: none;
+        }
+
+        .cooldown-text {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 12px;
+            font-weight: 600;
+        }
+
+        /* ТГК */
+        .tg-card {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+        }
+        .tg-icon {
+            font-size: 4rem;
+        }
+        .tg-text {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+        .tg-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #229ED9, #1b7cac);
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 900;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(34, 158, 217, 0.3);
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .tg-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+        .tg-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: var(--border);
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* ПРОМО */
+        .promo-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .promo-form input {
+            flex: 1;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            outline: none;
+        }
+        .promo-form input:focus {
+            border-color: var(--accent);
+        }
+        
+        .active-promo-info {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            display: none;
+        }
+        .active-promo-info.show {
+            display: block;
+        }
+        .active-promo-info .title {
+            font-size: 0.9rem;
+            color: var(--muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .active-promo-info .desc {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+
+        /* ВЕЙДЖЕР */
+        .wager-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            display: none;
+        }
+        .wager-box.show {
+            display: block;
+        }
+        .wager-box .lbl-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .wager-box .lbl { color: var(--muted); }
+        .wager-box .val { color: var(--gold); }
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: var(--card);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #4a7aff);
+            transition: width 0.4s ease-out;
+        }
+
+        /* ТОСТ */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px 20px;
+            border-radius: 12px;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            max-width: 340px;
+            font-weight: 600;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.win { border-color: var(--green); color: var(--green); }
+        .toast.lose { border-color: var(--red); color: var(--red); }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-inner">
+            <a class="logo" href="index.html">Win<span>play</span></a>
+
+            <div class="user-box" id="userBox" style="display:none;">
+                <div class="balance">Баланс: <b id="balanceDisplay">0.00</b> ₽</div>
+                <a class="profile-widget" href="profile.html">
+                    <div class="avatar-mini" id="headerAvatar">👤</div>
+                    <div class="profile-id" id="headerId">#0000</div>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="game-header">
+            <a class="back-btn" href="index.html">← В лобби</a>
+            <h2>🎁 Бонусы</h2>
+        </div>
+
+        <div class="bonus-grid">
+            <!-- РУЛЕТКА -->
+            <div class="bonus-card">
+                <h2>🎡 Колесо Фортуны</h2>
+                <div class="wheel-wrapper">
+                    <div class="wheel-pointer"></div>
+                    <canvas id="wheelCanvas" width="260" height="260"></canvas>
+                </div>
+                <button class="spin-btn" id="spinBtn" onclick="spinWheel()">Крутить</button>
+                <div class="cooldown-text" id="cooldownText">Доступно 1 раз в 24 часа</div>
+            </div>
+
+            <!-- ТГ БОНУС -->
+            <div class="bonus-card tg-card">
+                <h2>✈️ Telegram Бонус</h2>
+                <div class="tg-icon">📢</div>
+                <div class="tg-text">Подпишись на наш Telegram-канал и получи <b>50 ₽</b> на баланс!</div>
+                <button class="tg-btn" id="tgBtn" onclick="claimTgBonus()">Подписаться и получить</button>
+            </div>
+
+            <!-- ПРОМОКОД -->
+            <div class="bonus-card">
+                <h2>🎫 Активация промокода</h2>
+                <div class="promo-form">
+                    <input type="text" id="promoInput" placeholder="ВВЕДИТЕ КОД">
+                    <button class="btn btn-primary" onclick="activatePromo()">Активировать</button>
+                </div>
+                
+                <!-- Информация об активном депозитном промо -->
+                <div class="active-promo-info" id="activePromoInfo">
+                    <div class="title">Ожидается депозит</div>
+                    <div class="desc" id="activePromoDesc"></div>
+                    <div class="cooldown-text" id="promoTimer" style="text-align:left; margin-top:8px;"></div>
+                </div>
+
+                <!-- Вейджер -->
+                <div class="wager-box" id="wagerBox">
+                    <div class="lbl-row">
+                        <span class="lbl">Отыграно / Требуется</span>
+                        <span class="val" id="wagerVal">0.00 / 0.00 ₽</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="wagerBar" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const U_KEY = 'roulette_users_v1';
+        const S_KEY = 'roulette_session_v1';
+        const P_KEY = 'roulette_promos_v1';
+
+        function load(key, defaultValue) {
+            try {
+                const raw = localStorage.getItem(key);
+                return raw ? JSON.parse(raw) : defaultValue;
+            } catch (error) {
+                return defaultValue;
+            }
+        }
+
+        function save(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        let users = load(U_KEY, {});
+        let curUser = load(S_KEY, null);
+
+        if (!curUser || !users[curUser]) {
+            location.href = 'index.html';
+        }
+
+        function getBal() {
+            return users[curUser] ? users[curUser].balance : 0;
+        }
+
+        function refreshUI() {
+            document.getElementById('userBox').style.display = 'flex';
+            document.getElementById('balanceDisplay').textContent = getBal().toFixed(2);
+            document.getElementById('headerAvatar').textContent = users[curUser].avatar || '👤';
+            let cleanId = String(users[curUser].id || '');
+            while (cleanId.length < 4) cleanId = '0' + cleanId;
+            document.getElementById('headerId').textContent = '#' + cleanId;
+        }
+
+        function showToast(text, type) {
+            if (!type) type = '';
+            const t = document.getElementById('toast');
+            t.textContent = text;
+            t.className = 'toast show ' + type;
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        /* ========== РУЛЕТКА ========== */
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Обновленные призы
+        const sectors = [1, 2, 4, 6, 8, 10];
+        const colors = ['#22c55e', '#5b8cff', '#ffd166', '#ef4444', '#8b5cf6', '#14b8a6'];
+        let currentAngle = 0;
+
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 4;
+            const anglePerSector = (2 * Math.PI) / sectors.length;
+
+            for (let i = 0; i < sectors.length; i++) {
+                const startAngle = i * anglePerSector - Math.PI / 2;
+                const endAngle = (i + 1) * anglePerSector - Math.PI / 2;
+
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.fillStyle = colors[i];
+                ctx.fill();
+                ctx.strokeStyle = '#1c1f26';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + anglePerSector / 2);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 22px sans-serif';
+                ctx.fillText(sectors[i] + '₽', radius - 20, 8);
+                ctx.restore();
+            }
+        }
+
+        drawWheel();
+
+        let isSpinning = false;
+
+        function spinWheel() {
+            if (isSpinning) return;
+
+            const user = users[curUser];
+            const now = Date.now();
+            const cooldown = 24 * 3600 * 1000;
+
+            if (user.lastSpinTime && (now - user.lastSpinTime < cooldown)) {
+                showToast('Вы уже крутили сегодня', 'lose');
+                return;
+            }
+
+            isSpinning = true;
+            document.getElementById('spinBtn').disabled = true;
+
+            const winIndex = Math.floor(Math.random() * sectors.length);
+            const winAmount = sectors[winIndex];
+
+            const anglePerSector = 360 / sectors.length;
+            const targetSectorAngle = winIndex * anglePerSector + anglePerSector / 2;
+            
+            const targetMod = (360 - targetSectorAngle) % 360;
+            const currentMod = currentAngle % 360;
+            let delta = targetMod - currentMod;
+            if (delta < 0) delta += 360;
+
+            const totalRotation = currentAngle + 360 * 5 + delta;
+            currentAngle = totalRotation;
+            
+            canvas.style.transform = `rotate(${currentAngle}deg)`;
+
+            setTimeout(() => {
+                users[curUser].balance = (users[curUser].balance || 0) + winAmount;
+                users[curUser].lastSpinTime = Date.now();
+                
+                if (!users[curUser].history) users[curUser].history = [];
+                users[curUser].history.unshift({
+                    type: 'win',
+                    amount: winAmount,
+                    date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                    details: 'Колесо Фортуны'
+                });
+                if (users[curUser].history.length > 20) users[curUser].history.pop();
+                
+                save(U_KEY, users);
+                refreshUI();
+                showToast('🎉 Вы выиграли ' + winAmount + ' ₽!', 'win');
+                
+                isSpinning = false;
+                updateTimers();
+            }, 4100);
+        }
+
+        /* ========== ТГ БОНУС ========== */
+        function claimTgBonus() {
+            const user = users[curUser];
+            if (user.tgBonusClaimed) {
+                showToast('Вы уже получали этот бонус', 'lose');
+                return;
+            }
+
+            user.balance = (user.balance || 0) + 50; // Обновленный бонус
+            user.tgBonusClaimed = true;
+            
+            if (!user.history) user.history = [];
+            user.history.unshift({
+                type: 'win',
+                amount: 50,
+                date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                details: 'Бонус за ТГК'
+            });
+            if (user.history.length > 20) user.history.pop();
+
+            save(U_KEY, users);
+            refreshUI();
+            showToast('🎉 +50 ₽ за подписку на ТГК!', 'win');
+            
+            document.getElementById('tgBtn').disabled = true;
+            document.getElementById('tgBtn').textContent = 'Уже получено';
+        }
+
+        /* ========== ПРОМОКОДЫ И ВЕЙДЖЕР ========== */
+        function activatePromo() {
+            const input = document.getElementById('promoInput');
+            const code = input.value.trim().toUpperCase();
+            if (!code) return showToast('Введите промокод', 'lose');
+
+            let userPromos = users[curUser].usedPromos || [];
+            if (userPromos.indexOf(code) !== -1) {
+                showToast('Вы уже активировали этот промокод', 'lose');
+                return;
+            }
+
+            const promos = load(P_KEY, {});
+            const promo = promos[code];
+
+            if (!promo) return showToast('Промокод не найден', 'lose');
+            if (promo.used >= promo.limit) return showToast('Лимит активаций исчерпан', 'lose');
+
+            // Проверка срока активации самого промокода (время после создания)
+            if (promo.createdAt && promo.activateLimit > 0) {
+                const expireTime = promo.createdAt + (promo.activateLimit * 3600 * 1000);
+                if (Date.now() > expireTime) {
+                    showToast('Срок действия промокода истек', 'lose');
+                    return;
+                }
+            }
+
+            if (promo.type === 'fixed') {
+                users[curUser].balance = (users[curUser].balance || 0) + promo.amount;
+                if (!users[curUser].history) users[curUser].history = [];
+                users[curUser].history.unshift({
+                    type: 'win',
+                    amount: promo.amount,
+                    date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                    details: 'Промокод ' + code
+                });
+                if (users[curUser].history.length > 20) users[curUser].history.pop();
+                
+                save(U_KEY, users);
+                refreshUI();
+                showToast('🎁 +' + promo.amount.toFixed(2) + ' ₽ по промокоду!', 'win');
+            } 
+            else if (promo.type === 'percent') {
+                // Создаем активный промо на депозит
+                users[curUser].activePromo = {
+                    code: code,
+                    percent: promo.amount,
+                    depositLimit: promo.depositLimit || 12, // часов на депозит
+                    wagerMult: promo.wager || 1, // множитель вейджера
+                    expiresAt: Date.now() + ((promo.depositLimit || 12) * 3600 * 1000)
+                };
+                save(U_KEY, users);
+                showToast('🎫 Промокод активирован! Сделайте депозит для получения бонуса.', 'win');
+            }
+
+            // Добавляем в использованные
+            userPromos.push(code);
+            users[curUser].usedPromos = userPromos;
+            save(U_KEY, users);
+
+            promo.used = (promo.used || 0) + 1;
+            save(P_KEY, promos);
+
+            input.value = '';
+            updateTimers();
+        }
+
+        /* ========== ТАЙМЕРЫ И ВЕЙДЖЕР ========== */
+        function updateTimers() {
+            const user = users[curUser];
+            
+            // Вейджер
+            if (user.wagerRequired > 0) {
+                document.getElementById('wagerBox').classList.add('show');
+                const prog = user.wagerProgress || 0;
+                const req = user.wagerRequired;
+                document.getElementById('wagerVal').textContent = prog.toFixed(2) + ' / ' + req.toFixed(2) + ' ₽';
+                
+                let pct = (prog / req) * 100;
+                if (pct > 100) pct = 100;
+                if (pct < 0) pct = 0;
+                document.getElementById('wagerBar').style.width = pct + '%';
+            } else {
+                document.getElementById('wagerBox').classList.remove('show');
+            }
+
+            // Активный промо на депозит
+            const activePromoBlock = document.getElementById('activePromoInfo');
+            if (user.activePromo) {
+                const now = Date.now();
+                if (now >= user.activePromo.expiresAt) {
+                    // Истек
+                    user.activePromo = null;
+                    save(U_KEY, users);
+                    activePromoBlock.classList.remove('show');
+                } else {
+                    activePromoBlock.classList.add('show');
+                    document.getElementById('activePromoDesc').textContent = 'Бонус: +' + user.activePromo.percent + '% к депозиту';
+                    
+                    const left = user.activePromo.expiresAt - now;
+                    const hours = Math.floor(left / 3600000);
+                    const mins = Math.floor((left % 3600000) / 60000);
+                    document.getElementById('promoTimer').textContent = `Сгорает через: ${hours} ч ${mins} мин`;
+                }
+            } else {
+                activePromoBlock.classList.remove('show');
+            }
+        }
+
+        /* ========== ИНИЦИАЛИЗАЦИЯ ========== */
+        function init() {
+            refreshUI();
+            updateTimers();
+
+            // Проверка ТГ бонуса
+            if (users[curUser].tgBonusClaimed) {
+                document.getElementById('tgBtn').disabled = true;
+                document.getElementById('tgBtn').textContent = 'Уже получено';
+            }
+
+            // Проверка кулдауна рулетки
+            const user = users[curUser];
+            const now = Date.now();
+            const cooldown = 24 * 3600 * 1000;
+            if (user.lastSpinTime && (now - user.lastSpinTime < cooldown)) {
+                document.getElementById('spinBtn').disabled = true;
+                const left = cooldown - (now - user.lastSpinTime);
+                const hours = Math.floor(left / 3600000);
+                const mins = Math.floor((left % 3600000) / 60000);
+                document.getElementById('cooldownText').textContent = 'Доступно через: ' + hours + ' ч ' + mins + ' мин';
+            }
+
+            // Обновляем таймеры каждую минуту
+            setInterval(updateTimers, 60000);
+        }
+
+        init();
+    </script>
+</body>
+</html>

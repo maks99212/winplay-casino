@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- Подключаем официальный SDK Telegram -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<script>
+    // Ждём, пока SDK загрузится
+    window.addEventListener('load', function() {
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            
+            // Сообщаем Telegram, что приложение готово
+            tg.ready();
+            
+            // Разворачиваем приложение на весь экран (убирает лишние отступы)
+            tg.expand();
+
+            // (Опционально) Можно получить данные пользователя Telegram
+            // const user = tg.initDataUnsafe.user;
+            // console.log('Пользователь:', user);
+        } else {
+            console.log('Приложение открыто вне Telegram');
+        }
+    });
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вывод средств | Winplay</title>
+    <style>
+        :root {
+            --bg: #0f1115;
+            --card: #1c1f26;
+            --text: #e6e8ee;
+            --muted: #8b92a5;
+            --border: #2a2e39;
+            --accent: #5b8cff;
+            --gold: #ffd166;
+            --green: #22c55e;
+            --red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========== ШАПКА ========== */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 17, 21, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.4rem;
+            color: #fff;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+        .logo span { color: var(--accent); }
+
+        .user-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .balance {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .balance b { color: var(--gold); }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: #252932;
+            transform: translateY(-1px);
+        }
+        .btn-primary {
+            background: var(--accent);
+            border: none;
+            color: #fff;
+            width: 100%;
+            font-size: 1.1rem;
+            padding: 16px;
+        }
+        .btn-primary:hover { background: #4a7aff; }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            background: var(--muted);
+        }
+
+        .profile-widget {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--card);
+            padding: 4px 12px 4px 4px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: var(--text);
+        }
+        .profile-widget:hover { border-color: var(--accent); }
+        .avatar-mini {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .profile-id {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        /* ========== ОСНОВНОЙ КОНТЕНТ ========== */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .back-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .back-btn:hover { color: #fff; border-color: #fff; }
+
+        .form-panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 28px;
+            max-width: 600px;
+            margin: 0 auto;
+            animation: fade 0.3s ease-out;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .methods-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .method-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.2s;
+        }
+        .method-card:hover {
+            border-color: rgba(91, 140, 255, 0.5);
+        }
+        .method-card.selected {
+            border-color: var(--accent);
+            background: rgba(91, 140, 255, 0.1);
+            box-shadow: 0 0 0 1px var(--accent);
+        }
+        .method-icon {
+            font-size: 1.8rem;
+            width: 44px;
+            height: 44px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .method-info {
+            flex: 1;
+        }
+        .method-name {
+            font-weight: 800;
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
+        .method-limits {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            border-color: var(--accent);
+        }
+
+        .info-note {
+            font-size: 0.85rem;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 16px;
+            line-height: 1.4;
+        }
+
+        .empty-methods {
+            text-align: center;
+            color: var(--muted);
+            padding: 30px 10px;
+            font-size: 0.95rem;
+        }
+
+        /* ========== ТОСТ ========== */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px 20px;
+            border-radius: 12px;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            max-width: 340px;
+            font-weight: 600;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.win { border-color: var(--green); }
+        .toast.lose { border-color: var(--red); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-inner">
+            <a class="logo" href="index.html">Win<span>play</span></a>
+
+            <div class="user-box" id="userBox" style="display:none;">
+                <div class="balance">Баланс: <b id="balanceDisplay">0.00</b> ₽</div>
+                <a class="profile-widget" href="profile.html">
+                    <div class="avatar-mini" id="headerAvatar">👤</div>
+                    <div class="profile-id" id="headerId">#0000</div>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="page-header">
+            <a class="back-btn" href="index.html">← В лобби</a>
+            <h2>💰 Вывод средств</h2>
+        </div>
+
+        <div class="form-panel">
+            <div class="section-title">Выберите метод вывода</div>
+            
+            <div class="methods-grid" id="methodsGrid">
+                <!-- Методы будут добавлены через JS -->
+            </div>
+
+            <div class="form-group">
+                <label>Сумма вывода (₽)</label>
+                <input type="number" id="withdrawAmount" placeholder="Введите сумму" min="1" step="0.01">
+            </div>
+
+            <div class="form-group">
+                <label>Ваши реквизиты (карта / кошелёк)</label>
+                <input type="text" id="withdrawRequisites" placeholder="Номер карты или адрес кошелька">
+            </div>
+
+            <button class="btn btn-primary" id="submitBtn" onclick="submitWithdraw()">Создать заявку на вывод</button>
+            
+            <div class="info-note">
+                Средства не списываются до одобрения заявки администратором.<br>
+                Убедитесь, что у вас достаточно средств на балансе.
+            </div>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        /* ========== КЛЮЧИ ХРАНИЛИЩА ========== */
+        const U_KEY = 'roulette_users_v1';
+        const S_KEY = 'roulette_session_v1';
+        const WM_KEY = 'roulette_withdraw_methods_v1';
+        const R_KEY = 'roulette_reqs_v1';
+
+        /* ========== ЗАГРУЗКА И СОХРАНЕНИЕ ========== */
+        function load(key, defaultValue) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw) {
+                    return JSON.parse(raw);
+                } else {
+                    return defaultValue;
+                }
+            } catch (error) {
+                return defaultValue;
+            }
+        }
+
+        function save(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        /* ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ========== */
+        let users = load(U_KEY, {});
+        let curUser = load(S_KEY, null);
+        let withdrawMethods = load(WM_KEY, []);
+        let selectedMethodId = null;
+
+        /* ========== ПРОВЕРКА АВТОРИЗАЦИИ ========== */
+        if (!curUser) {
+            location.href = 'index.html';
+        }
+
+        if (!users[curUser]) {
+            localStorage.removeItem(S_KEY);
+            location.href = 'index.html';
+        }
+
+        /* ========== УТИЛИТЫ ========== */
+        function showToast(text, type) {
+            if (!type) {
+                type = '';
+            }
+            const toast = document.getElementById('toast');
+            toast.textContent = text;
+            toast.className = 'toast show ' + type;
+
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        function formatMoney(value) {
+            let num = parseFloat(value);
+            if (isNaN(num)) {
+                num = 0;
+            }
+            return num.toFixed(2);
+        }
+
+        function escapeHTML(str) {
+            if (!str) {
+                return '';
+            }
+            return String(str).replace(/[&<>'"]/g, function(tag) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                };
+                if (map[tag]) {
+                    return map[tag];
+                } else {
+                    return tag;
+                }
+            });
+        }
+
+        /* ========== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ========== */
+        function refreshUI() {
+            users = load(U_KEY, {});
+            const user = users[curUser];
+
+            if (!user) {
+                location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('userBox').style.display = 'flex';
+            document.getElementById('balanceDisplay').textContent = formatMoney(user.balance);
+
+            if (user.avatar) {
+                document.getElementById('headerAvatar').textContent = user.avatar;
+            } else {
+                document.getElementById('headerAvatar').textContent = '👤';
+            }
+
+            let cleanId = String(user.id || '');
+            while (cleanId.length < 4) {
+                cleanId = '0' + cleanId;
+            }
+            document.getElementById('headerId').textContent = '#' + cleanId;
+        }
+
+        /* ========== РЕНДЕР МЕТОДОВ ========== */
+        function renderMethods() {
+            withdrawMethods = load(WM_KEY, []);
+            const grid = document.getElementById('methodsGrid');
+
+            if (withdrawMethods.length === 0) {
+                grid.innerHTML = '<div class="empty-methods">Администратор пока не добавил методы вывода.</div>';
+                return;
+            }
+
+            let html = '';
+
+            for (let i = 0; i < withdrawMethods.length; i++) {
+                const method = withdrawMethods[i];
+                let icon = '🏦';
+                const nameLower = method.name.toLowerCase();
+                if (nameLower.includes('bitcoin') || nameLower.includes('btc')) icon = '₿';
+                else if (nameLower.includes('usdt') || nameLower.includes('tether')) icon = '💵';
+                else if (nameLower.includes('карт') || nameLower.includes('card')) icon = '💳';
+                else if (nameLower.includes('сбер') || nameLower.includes('sber')) icon = '🟢';
+
+                html += '<div class="method-card" id="method-' + method.id + '" onclick="selectMethod(' + method.id + ')">';
+                html += '<div class="method-icon">' + icon + '</div>';
+                html += '<div class="method-info">';
+                html += '<div class="method-name">' + escapeHTML(method.name) + '</div>';
+                html += '<div class="method-limits">Лимиты: ' + formatMoney(method.min) + ' - ' + formatMoney(method.max) + ' ₽</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+
+            grid.innerHTML = html;
+        }
+
+        /* ========== ВЫБОР МЕТОДА ========== */
+        function selectMethod(id) {
+            selectedMethodId = id;
+
+            const cards = document.querySelectorAll('.method-card');
+            for (let i = 0; i < cards.length; i++) {
+                cards[i].classList.remove('selected');
+            }
+
+            const selectedCard = document.getElementById('method-' + id);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+        }
+
+        /* ========== ОТПРАВКА ЗАЯВКИ ========== */
+        function submitWithdraw() {
+            if (!selectedMethodId) {
+                showToast('Выберите метод вывода', 'lose');
+                return;
+            }
+
+            let method = null;
+            for (let i = 0; i < withdrawMethods.length; i++) {
+                if (withdrawMethods[i].id === selectedMethodId) {
+                    method = withdrawMethods[i];
+                    break;
+                }
+            }
+
+            if (!method) {
+                showToast('Метод не найден', 'lose');
+                return;
+            }
+
+            const amountInput = document.getElementById('withdrawAmount');
+            const requisitesInput = document.getElementById('withdrawRequisites');
+            
+            const amount = parseFloat(amountInput.value);
+            const requisites = requisitesInput.value.trim();
+
+            if (!amount || amount <= 0) {
+                showToast('Введите корректную сумму', 'lose');
+                return;
+            }
+
+            if (amount < method.min) {
+                showToast('Минимальная сумма: ' + formatMoney(method.min) + ' ₽', 'lose');
+                return;
+            }
+
+            if (amount > method.max) {
+                showToast('Максимальная сумма: ' + formatMoney(method.max) + ' ₽', 'lose');
+                return;
+            }
+
+            const user = users[curUser];
+            if (amount > user.balance) {
+                showToast('Недостаточно средств на балансе', 'lose');
+                return;
+            }
+
+            if (!requisites) {
+                showToast('Введите реквизиты для вывода', 'lose');
+                return;
+            }
+
+            // Создаём заявку
+            const requests = load(R_KEY, []);
+            
+            const newRequest = {
+                id: 'req_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                type: 'withdraw',
+                login: curUser,
+                method: method.name,
+                amount: amount,
+                requisites: requisites,
+                status: 'pending',
+                date: Date.now()
+            };
+
+            requests.push(newRequest);
+            save(R_KEY, requests);
+
+            showToast('✅ Заявка на вывод ' + formatMoney(amount) + ' ₽ создана!', 'win');
+            
+            amountInput.value = '';
+            requisitesInput.value = '';
+            document.getElementById('submitBtn').disabled = true;
+
+            setTimeout(function() {
+                location.href = 'profile.html';
+            }, 2000);
+        }
+
+        /* ========== ИНИЦИАЛИЗАЦИЯ ========== */
+        function init() {
+            refreshUI();
+            renderMethods();
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- Подключаем официальный SDK Telegram -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<script>
+    // Ждём, пока SDK загрузится
+    window.addEventListener('load', function() {
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            
+            // Сообщаем Telegram, что приложение готово
+            tg.ready();
+            
+            // Разворачиваем приложение на весь экран (убирает лишние отступы)
+            tg.expand();
+
+            // (Опционально) Можно получить данные пользователя Telegram
+            // const user = tg.initDataUnsafe.user;
+            // console.log('Пользователь:', user);
+        } else {
+            console.log('Приложение открыто вне Telegram');
+        }
+    });
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crash | Winplay</title>
+    <style>
+        :root {
+            --bg: #0f1115;
+            --card: #1c1f26;
+            --text: #e6e8ee;
+            --muted: #8b92a5;
+            --border: #2a2e39;
+            --accent: #5b8cff;
+            --gold: #ffd166;
+            --green: #22c55e;
+            --red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ========== ШАПКА ========== */
+        header {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.4rem;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+        .logo span { color: var(--accent); }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .balance {
+            background: var(--bg);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            border: 1px solid var(--border);
+        }
+        .balance b { color: var(--gold); }
+
+        .back-btn {
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            background: #252932;
+            border-color: var(--accent);
+        }
+
+        /* ========== МАКЕТ ========== */
+        .layout {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 70px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ЛЕВАЯ ПАНЕЛЬ (Игроки) */
+        .sidebar {
+            width: 280px;
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 800;
+            color: var(--muted);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .players-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .player-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .player-row.me {
+            border-color: var(--accent);
+            background: rgba(91, 140, 255, 0.05);
+        }
+
+        .player-row.cashed-out {
+            border-color: rgba(34, 197, 94, 0.3);
+            background: rgba(34, 197, 94, 0.05);
+            opacity: 0.7;
+        }
+
+        .player-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+        }
+
+        .player-name {
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+        }
+
+        .player-bet {
+            color: var(--muted);
+            font-size: 0.75rem;
+        }
+
+        .player-status {
+            text-align: right;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .status-waiting { color: var(--muted); }
+        .status-flying { color: var(--gold); }
+        .status-cashed { color: var(--green); }
+        .status-lost { color: var(--red); }
+
+        .empty-list {
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.85rem;
+            padding: 20px;
+        }
+
+        /* ИГРОВОЕ ПОЛЕ */
+        .game-area {
+            flex: 1;
+            position: relative;
+            background: radial-gradient(circle at center, #161a23, var(--bg));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .multiplier-display {
+            position: relative;
+            z-index: 5;
+            font-size: 6rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 40px rgba(91, 140, 255, 0.4);
+            transition: color 0.3s, transform 0.1s;
+            user-select: none;
+        }
+        
+        .multiplier-display.crashed {
+            color: var(--red);
+            text-shadow: 0 0 40px rgba(239, 68, 68, 0.5);
+            animation: shake 0.5s;
+        }
+
+        .multiplier-display.waiting {
+            font-size: 3.5rem;
+            color: var(--muted);
+            text-shadow: none;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        /* ПРОГРЕСС-БАР ОЖИДАНИЯ */
+        .waiting-bar-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 600px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            z-index: 10;
+            overflow: hidden;
+            display: none;
+        }
+
+        .waiting-bar {
+            height: 100%;
+            background: var(--accent);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        .waiting-text {
+            position: absolute;
+            top: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: none;
+            text-align: center;
+        }
+
+        /* ПАНЕЛЬ УПРАВЛЕНИЯ */
+        .controls {
+            width: 320px;
+            background: var(--card);
+            border-left: 1px solid var(--border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 10;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .input-group input[type="number"] {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            outline: none;
+        }
+        .input-group input[type="number"]:focus {
+            border-color: var(--accent);
+        }
+        .input-group input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            user-select: none;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+        .checkbox-group label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .play-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+            transition: all 0.2s;
+            margin-top: auto;
+        }
+
+        .play-btn.cashout {
+            background: linear-gradient(135deg, #ffd166, #f59e0b);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(255, 209, 102, 0.3);
+        }
+
+        .play-btn.disabled {
+            background: var(--border);
+            color: var(--muted);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .play-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        /* ТОСТ */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px 20px;
+            border-radius: 12px;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            font-size: 1rem;
+            font-weight: 600;
+            max-width: 340px;
+            pointer-events: none;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.win { border-color: var(--green); color: var(--green); }
+        .toast.lose { border-color: var(--red); color: var(--red); }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .multiplier-display { font-size: 4rem; }
+        }
+        @media (max-width: 768px) {
+            .layout { flex-direction: column; }
+            .controls {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--border);
+                max-height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="back-btn">← В лобби</a>
+        <a class="logo" href="index.html" style="position:absolute; left:50%; transform:translateX(-50%);">Win<span>play</span></a>
+        <div class="header-right">
+            <div class="balance">Баланс: <b id="balance">0.00</b> ₽</div>
+        </div>
+    </header>
+
+    <div class="layout">
+        <!-- ЛЕВАЯ ПАНЕЛЬ: Игроки -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <span>👥 Игроки</span>
+                <span id="playersCount">0</span>
+            </div>
+            <div class="players-list" id="playersList">
+                <div class="empty-list">Ожидание игроков...</div>
+            </div>
+        </div>
+
+        <!-- ИГРОВОЕ ПОЛЕ -->
+        <div class="game-area" id="gameArea">
+            <div class="waiting-bar-container" id="waitingBarContainer">
+                <div class="waiting-bar" id="waitingBar"></div>
+            </div>
+            <div class="waiting-text" id="waitingText">Приём ставок: 15 сек</div>
+            
+            <canvas id="crashCanvas"></canvas>
+            <div class="multiplier-display waiting" id="multiplierDisplay">Ожидание...</div>
+        </div>
+
+        <!-- ПРАВАЯ ПАНЕЛЬ: Управление -->
+        <div class="controls">
+            <div class="input-group">
+                <label>Сумма ставки (₽)</label>
+                <input type="number" id="betAmount" value="10" min="1" step="1">
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="autoCashoutCheck">
+                <label for="autoCashoutCheck">Авто-вывод на x</label>
+            </div>
+            
+            <div class="input-group" id="autoCashoutGroup" style="opacity:0.5;">
+                <input type="number" id="autoCashoutInput" value="2.00" min="1.01" step="0.01" disabled>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="autoBetCheck">
+                <label for="autoBetCheck">Авто-ставка</label>
+            </div>
+
+            <button class="play-btn" id="playBtn" onclick="handlePlayBtn()">Поставить</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        /* ========== НАДЕЖНАЯ ЗАГРУЗКА И СОХРАНЕНИЕ ========== */
+        function load(key, defaultValue) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw || raw === 'null' || raw === 'undefined') {
+                    return defaultValue;
+                }
+                const parsed = JSON.parse(raw);
+                if (parsed === null || parsed === undefined) {
+                    return defaultValue;
+                }
+                return parsed;
+            } catch (error) {
+                return defaultValue;
+            }
+        }
+
+        function save(key, value) {
+            if (value === null || value === undefined) {
+                localStorage.removeItem(key);
+            } else {
+                localStorage.setItem(key, JSON.stringify(value));
+            }
+        }
+
+        /* ========== КЛЮЧИ ========== */
+        const U_KEY = 'roulette_users_v1';
+        const S_KEY = 'roulette_session_v1';
+        const G_KEY = 'roulette_game_settings_v1';
+        const CRASH_STATE_KEY = 'crash_state_v1';
+
+        /* ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ========== */
+        let users = load(U_KEY, {});
+        let curUser = load(S_KEY, null);
+
+        if (!curUser || typeof curUser !== 'string' || !users || typeof users !== 'object' || !users[curUser]) {
+            location.href = 'index.html';
+        }
+
+        /* ========== ГЕНЕРАЦИЯ КРАШ-ПОИНТА ========== */
+        function generateCrashPoint() {
+            let settings = load(G_KEY, {});
+            if (!settings || typeof settings !== 'object') settings = {};
+            
+            let crashSettings = settings.crash;
+            if (!crashSettings || typeof crashSettings !== 'object') crashSettings = {};
+            
+            const winChance = crashSettings.winChance !== undefined ? crashSettings.winChance : 50;
+            
+            if (winChance >= 90) {
+                return 1.5 + Math.random() * 8.5;
+            } else if (winChance >= 50) {
+                return 1.1 + Math.random() * 4.9;
+            } else {
+                return 1.0 + Math.random() * 1.5;
+            }
+        }
+
+        /* ========== ИНИЦИАЛИЗАЦИЯ СОСТОЯНИЯ ========== */
+        function initGameState() {
+            const now = Date.now();
+            const state = {
+                phase: 'waiting',
+                phaseStartTime: now,
+                phaseEndTime: now + 15000,
+                crashPoint: generateCrashPoint(),
+                multiplier: 1.00,
+                players: {}
+            };
+            save(CRASH_STATE_KEY, state);
+            return state;
+        }
+
+        /* ========== УТИЛИТЫ ========== */
+        function getBal() {
+            if (!curUser || !users[curUser]) return 0;
+            return users[curUser].balance || 0;
+        }
+
+        function setBal(v) {
+            if (!curUser || !users[curUser]) return;
+            users[curUser].balance = Math.max(0, parseFloat(v.toFixed(2)));
+            save(U_KEY, users);
+            document.getElementById('balance').textContent = getBal().toFixed(2);
+        }
+
+        function addWager(amt) {
+            if (!users[curUser] || !users[curUser].wagerRequired) return;
+            users[curUser].wagerProgress = (users[curUser].wagerProgress || 0) + amt;
+            if (users[curUser].wagerProgress >= users[curUser].wagerRequired) {
+                users[curUser].wagerRequired = 0;
+                users[curUser].wagerProgress = 0;
+                showToast('🎉 Вейджер отыгран!', 'win');
+            }
+            save(U_KEY, users);
+        }
+
+        function showToast(txt, type) {
+            if (!type) type = '';
+            const t = document.getElementById('toast');
+            t.textContent = txt;
+            t.className = 'toast show ' + type;
+            setTimeout(function() { t.classList.remove('show'); }, 3000);
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>'"]/g, function(tag) {
+                const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' };
+                return map[tag] || tag;
+            });
+        }
+
+        /* ========== CANVAS ========== */
+        const canvas = document.getElementById('crashCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameArea = document.getElementById('gameArea');
+        
+        let W = 0, H = 0;
+        let points = [];
+
+        function resize() {
+            const rect = gameArea.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = Math.floor(rect.width * dpr);
+            canvas.height = Math.floor(rect.height * dpr);
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            W = rect.width;
+            H = rect.height;
+            drawCurve(gameState);
+        }
+        window.addEventListener('resize', resize);
+
+        function drawCurve(state) {
+            if (!W || !H) return;
+            ctx.clearRect(0, 0, W, H);
+
+            // Сетка
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < W; i += 50) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke();
+            }
+            for (let i = 0; i < H; i += 50) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
+            }
+
+            if (!state || points.length < 2) return;
+
+            const isCrashed = state.phase === 'crashed';
+
+            const grad = ctx.createLinearGradient(0, H, 0, 0);
+            if (isCrashed) {
+                grad.addColorStop(0, 'rgba(239, 68, 68, 0)');
+                grad.addColorStop(1, 'rgba(239, 68, 68, 1)');
+            } else {
+                grad.addColorStop(0, 'rgba(34, 197, 94, 0)');
+                grad.addColorStop(1, 'rgba(34, 197, 94, 1)');
+            }
+
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 4;
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+
+            let maxMult = state.multiplier || 1;
+            if (maxMult < 2) maxMult = 2;
+            
+            const scaleX = W / 60;
+            const scaleY = H / maxMult;
+
+            for (let i = 0; i < points.length; i++) {
+                const px = i * scaleX;
+                const py = H - (points[i] * scaleY);
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+
+            ctx.lineTo(W, H);
+            ctx.lineTo(0, H);
+            ctx.closePath();
+            
+            const fillGrad = ctx.createLinearGradient(0, H, 0, 0);
+            if (isCrashed) {
+                fillGrad.addColorStop(0, 'rgba(239, 68, 68, 0)');
+                fillGrad.addColorStop(1, 'rgba(239, 68, 68, 0.2)');
+            } else {
+                fillGrad.addColorStop(0, 'rgba(34, 197, 94, 0)');
+                fillGrad.addColorStop(1, 'rgba(34, 197, 94, 0.2)');
+            }
+            ctx.fillStyle = fillGrad;
+            ctx.fill();
+        }
+
+        /* ========== UI ЭЛЕМЕНТЫ ========== */
+        const playBtn = document.getElementById('playBtn');
+        const betInput = document.getElementById('betAmount');
+        const autoCashoutCheck = document.getElementById('autoCashoutCheck');
+        const autoCashoutInput = document.getElementById('autoCashoutInput');
+        const autoCashoutGroup = document.getElementById('autoCashoutGroup');
+        const autoBetCheck = document.getElementById('autoBetCheck');
+        const multiplierDisplay = document.getElementById('multiplierDisplay');
+        const waitingBar = document.getElementById('waitingBar');
+        const waitingBarContainer = document.getElementById('waitingBarContainer');
+        const waitingText = document.getElementById('waitingText');
+        const playersList = document.getElementById('playersList');
+        const playersCount = document.getElementById('playersCount');
+
+        autoCashoutCheck.addEventListener('change', function() {
+            if (this.checked) {
+                autoCashoutInput.disabled = false;
+                autoCashoutGroup.style.opacity = '1';
+            } else {
+                autoCashoutInput.disabled = true;
+                autoCashoutGroup.style.opacity = '0.5';
+            }
+        });
+
+        /* ========== ГЛАВНЫЙ ЦИКЛ ========== */
+        let gameState = null;
+
+        function tick() {
+            let state = load(CRASH_STATE_KEY, null);
+            
+            // Если стейта нет или он поврежден — создаем заново
+            if (!state || typeof state !== 'object') {
+                state = initGameState();
+            }
+
+            // Проверка целостности структуры
+            if (!state.players || typeof state.players !== 'object') state.players = {};
+            if (!state.phase) state.phase = 'waiting';
+            if (typeof state.phaseStartTime !== 'number') state.phaseStartTime = Date.now();
+            if (typeof state.phaseEndTime !== 'number') state.phaseEndTime = Date.now() + 15000;
+            if (typeof state.multiplier !== 'number') state.multiplier = 1.00;
+            if (typeof state.crashPoint !== 'number') state.crashPoint = generateCrashPoint();
+
+            gameState = state;
+
+            const now = Date.now();
+
+            // ЛОГИКА ФАЗ
+            if (state.phase === 'waiting') {
+                if (now >= state.phaseEndTime) {
+                    state.phase = 'flying';
+                    state.phaseStartTime = now;
+                    state.multiplier = 1.00;
+                    save(CRASH_STATE_KEY, state);
+                }
+            } else if (state.phase === 'flying') {
+                const elapsed = now - state.phaseStartTime;
+                const mult = Math.pow(Math.E, 0.00006 * elapsed);
+                state.multiplier = mult;
+
+                if (mult >= state.crashPoint) {
+                    state.phase = 'crashed';
+                    state.phaseStartTime = now;
+                    state.phaseEndTime = now + 4000;
+                    
+                    for (let login in state.players) {
+                        if (state.players[login].status === 'flying') {
+                            state.players[login].status = 'lost';
+                        }
+                    }
+                }
+                save(CRASH_STATE_KEY, state);
+            } else if (state.phase === 'crashed') {
+                if (now >= state.phaseEndTime) {
+                    state = initGameState();
+                    points = [];
+                    save(CRASH_STATE_KEY, state);
+                }
+            }
+
+            updateUI(state);
+            requestAnimationFrame(tick);
+        }
+
+        function updateUI(state) {
+            // 1. Ползунок и текст
+            if (state.phase === 'waiting') {
+                waitingBarContainer.style.display = 'block';
+                waitingText.style.display = 'block';
+                
+                const totalWait = 15000;
+                const elapsed = Date.now() - state.phaseStartTime;
+                let percent = 100 - (elapsed / totalWait) * 100;
+                if (percent < 0) percent = 0;
+                if (percent > 100) percent = 100;
+                
+                waitingBar.style.width = percent + '%';
+                
+                let secLeft = Math.ceil((state.phaseEndTime - Date.now()) / 1000);
+                if (secLeft < 0) secLeft = 0;
+                waitingText.textContent = 'Приём ставок: ' + secLeft + ' сек';
+                
+                multiplierDisplay.textContent = 'Ожидание...';
+                multiplierDisplay.className = 'multiplier-display waiting';
+            } else {
+                waitingBarContainer.style.display = 'none';
+                waitingText.style.display = 'none';
+                
+                if (state.phase === 'flying') {
+                    multiplierDisplay.textContent = state.multiplier.toFixed(2) + 'x';
+                    multiplierDisplay.className = 'multiplier-display';
+                    
+                    if (points.length === 0 || state.multiplier > points[points.length - 1] + 0.02) {
+                        points.push(state.multiplier);
+                    }
+                } else if (state.phase === 'crashed') {
+                    multiplierDisplay.textContent = 'КРАШ ' + state.crashPoint.toFixed(2) + 'x';
+                    multiplierDisplay.className = 'multiplier-display crashed';
+                }
+            }
+
+            drawCurve(state);
+
+            // 2. Кнопка
+            const myPlayer = state.players[curUser];
+            const bal = getBal();
+            
+            if (state.phase === 'waiting') {
+                if (myPlayer) {
+                    playBtn.textContent = 'Ожидание...';
+                    playBtn.className = 'play-btn disabled';
+                    playBtn.disabled = true;
+                } else {
+                    if (bal <= 0) {
+                        playBtn.textContent = 'Недостаточно средств';
+                        playBtn.className = 'play-btn disabled';
+                        playBtn.disabled = true;
+                    } else {
+                        playBtn.textContent = 'Поставить';
+                        playBtn.className = 'play-btn';
+                        playBtn.disabled = false;
+                    }
+                }
+                betInput.disabled = false;
+            } else if (state.phase === 'flying') {
+                betInput.disabled = true;
+                if (myPlayer && myPlayer.status === 'flying') {
+                    playBtn.textContent = 'Забрать ' + (myPlayer.amount * state.multiplier).toFixed(2) + ' ₽';
+                    playBtn.className = 'play-btn cashout';
+                    playBtn.disabled = false;
+                } else if (myPlayer && myPlayer.status === 'cashed') {
+                    playBtn.textContent = 'Вы забрали на ' + myPlayer.cashedOutAt.toFixed(2) + 'x';
+                    playBtn.className = 'play-btn disabled';
+                    playBtn.disabled = true;
+                } else {
+                    playBtn.textContent = 'Ставки приняты';
+                    playBtn.className = 'play-btn disabled';
+                    playBtn.disabled = true;
+                }
+            } else if (state.phase === 'crashed') {
+                betInput.disabled = true;
+                if (myPlayer) {
+                    if (myPlayer.status === 'lost') {
+                        playBtn.textContent = '💥 Краш! Вы проиграли';
+                    } else if (myPlayer.status === 'cashed') {
+                        playBtn.textContent = '✅ Вы выиграли';
+                    }
+                } else {
+                    playBtn.textContent = 'Ожидание...';
+                }
+                playBtn.className = 'play-btn disabled';
+                playBtn.disabled = true;
+            }
+
+            renderPlayers(state);
+        }
+
+        function renderPlayers(state) {
+            const players = state.players || {};
+            const keys = Object.keys(players);
+
+            playersCount.textContent = keys.length;
+
+            if (keys.length === 0) {
+                playersList.innerHTML = '<div class="empty-list">Ожидание игроков...</div>';
+                return;
+            }
+
+            let html = '';
+            
+            keys.sort(function(a, b) {
+                if (a === curUser) return -1;
+                if (b === curUser) return 1;
+                return 0;
+            });
+
+            for (let i = 0; i < keys.length; i++) {
+                const login = keys[i];
+                const p = players[login];
+                const isMe = login === curUser;
+
+                let rowClass = 'player-row';
+                if (isMe) rowClass += ' me';
+                if (p.status === 'cashed') rowClass += ' cashed-out';
+
+                let statusHtml = '';
+                if (p.status === 'waiting' || p.status === 'flying') {
+                    if (p.autoCashout) {
+                        statusHtml = '<span class="status-flying">✈️ x' + p.autoCashout.toFixed(2) + '</span>';
+                    } else {
+                        statusHtml = '<span class="status-flying">✈️</span>';
+                    }
+                } else if (p.status === 'cashed') {
+                    statusHtml = '<span class="status-cashed">+' + (p.amount * p.cashedOutAt).toFixed(2) + ' ₽</span>';
+                } else if (p.status === 'lost') {
+                    statusHtml = '<span class="status-lost">💥 -' + p.amount.toFixed(2) + ' ₽</span>';
+                }
+
+                let avatar = '👤';
+                let nick = login;
+                if (users[login]) {
+                    if (users[login].avatar) avatar = users[login].avatar;
+                    if (users[login].nick) nick = users[login].nick;
+                }
+
+                html += '<div class="' + rowClass + '">';
+                html += '<div class="player-info">';
+                html += '<div class="player-name">' + avatar + ' ' + escapeHTML(nick) + (isMe ? ' (Вы)' : '') + '</div>';
+                html += '<div class="player-bet">' + p.amount.toFixed(2) + ' ₽</div>';
+                html += '</div>';
+                html += '<div class="player-status">' + statusHtml + '</div>';
+                html += '</div>';
+            }
+
+            playersList.innerHTML = html;
+        }
+
+        /* ========== ОБРАБОТКА КНОПКИ ========== */
+        function handlePlayBtn() {
+            let state = load(CRASH_STATE_KEY, null);
+            if (!state || !state.players) return;
+            
+            if (state.phase === 'waiting') {
+                const bet = parseFloat(betInput.value);
+                if (!bet || bet <= 0) return showToast('Введите корректную ставку', 'lose');
+                if (bet > getBal()) return showToast('Недостаточно средств', 'lose');
+
+                let settings = load(G_KEY, {});
+                let crashSettings = settings.crash || { minBet: 10, maxBet: 10000 };
+                if (bet < crashSettings.minBet) return showToast('Мин. ставка: ' + crashSettings.minBet + ' ₽', 'lose');
+                if (bet > crashSettings.maxBet) return showToast('Макс. ставка: ' + crashSettings.maxBet + ' ₽', 'lose');
+
+                if (state.players[curUser]) return showToast('Вы уже сделали ставку', 'lose');
+
+                setBal(getBal() - bet);
+                addWager(bet);
+
+                users[curUser].totalBets = (users[curUser].totalBets || 0) + bet;
+                if (!users[curUser].history) users[curUser].history = [];
+                users[curUser].history.unshift({ type: 'bet', amount: bet, date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }), details: 'Crash игра' });
+                if (users[curUser].history.length > 20) users[curUser].history.pop();
+                save(U_KEY, users);
+
+                const autoCo = autoCashoutCheck.checked ? parseFloat(autoCashoutInput.value) : null;
+                
+                state.players[curUser] = {
+                    amount: bet,
+                    autoCashout: autoCo,
+                    cashedOutAt: null,
+                    status: 'waiting'
+                };
+                save(CRASH_STATE_KEY, state);
+                showToast('Ставка принята!', 'win');
+
+            } else if (state.phase === 'flying') {
+                const p = state.players[curUser];
+                if (p && p.status === 'flying') {
+                    const winAmount = p.amount * state.multiplier;
+                    setBal(getBal() + winAmount);
+                    
+                    p.status = 'cashed';
+                    p.cashedOutAt = state.multiplier;
+                    save(CRASH_STATE_KEY, state);
+
+                    users[curUser].history.unshift({ type: 'win', amount: winAmount, date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }), details: 'Crash (' + state.multiplier.toFixed(2) + 'x)' });
+                    if (users[curUser].history.length > 20) users[curUser].history.pop();
+                    save(U_KEY, users);
+
+                    showToast('💰 Забрали ' + winAmount.toFixed(2) + ' ₽ на ' + state.multiplier.toFixed(2) + 'x', 'win');
+                }
+            }
+        }
+
+        /* ========== АВТО-ВЫВОД И АВТО-СТАВКА ========== */
+        setInterval(function() {
+            let state = load(CRASH_STATE_KEY, null);
+            if (!state || !state.players) return;
+
+            const now = Date.now();
+
+            // Авто-ставка
+            if (state.phase === 'waiting' && autoBetCheck.checked && !state.players[curUser]) {
+                if (state.phaseEndTime - now > 2000) {
+                    const bet = parseFloat(betInput.value);
+                    if (bet > 0 && bet <= getBal()) {
+                        let settings = load(G_KEY, {});
+                        let crashSettings = settings.crash || { minBet: 10, maxBet: 10000 };
+                        if (bet >= crashSettings.minBet && bet <= crashSettings.maxBet) {
+                            setBal(getBal() - bet);
+                            addWager(bet);
+                            
+                            users[curUser].totalBets = (users[curUser].totalBets || 0) + bet;
+                            if (!users[curUser].history) users[curUser].history = [];
+                            users[curUser].history.unshift({ type: 'bet', amount: bet, date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }), details: 'Crash (авто)' });
+                            if (users[curUser].history.length > 20) users[curUser].history.pop();
+                            save(U_KEY, users);
+
+                            const autoCo = autoCashoutCheck.checked ? parseFloat(autoCashoutInput.value) : null;
+                            state.players[curUser] = {
+                                amount: bet,
+                                autoCashout: autoCo,
+                                cashedOutAt: null,
+                                status: 'waiting'
+                            };
+                            save(CRASH_STATE_KEY, state);
+                            showToast('Авто-ставка принята!', 'win');
+                        }
+                    }
+                }
+            }
+
+            // Авто-вывод
+            if (state.phase === 'flying') {
+                const p = state.players[curUser];
+                if (p && p.status === 'flying' && p.autoCashout && state.multiplier >= p.autoCashout) {
+                    const winAmount = p.amount * p.autoCashout;
+                    setBal(getBal() + winAmount);
+                    
+                    p.status = 'cashed';
+                    p.cashedOutAt = p.autoCashout;
+                    save(CRASH_STATE_KEY, state);
+
+                    users[curUser].history.unshift({ type: 'win', amount: winAmount, date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }), details: 'Crash (авто ' + p.autoCashout.toFixed(2) + 'x)' });
+                    if (users[curUser].history.length > 20) users[curUser].history.pop();
+                    save(U_KEY, users);
+
+                    showToast('🤖 Авто-вывод на ' + p.autoCashout.toFixed(2) + 'x! +' + winAmount.toFixed(2) + ' ₽', 'win');
+                }
+            }
+        }, 100);
+
+        /* ========== СТАРТ ========== */
+        document.getElementById('balance').textContent = getBal().toFixed(2);
+        
+        // Инициализируем начальный стейт, если его нет
+        let initialState = load(CRASH_STATE_KEY, null);
+        if (!initialState) {
+            initGameState();
+        }
+
+        resize();
+        tick();
+
+    </script>
+</body>
+</html>

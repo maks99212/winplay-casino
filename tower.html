@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- Подключаем официальный SDK Telegram -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<script>
+    // Ждём, пока SDK загрузится
+    window.addEventListener('load', function() {
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            
+            // Сообщаем Telegram, что приложение готово
+            tg.ready();
+            
+            // Разворачиваем приложение на весь экран (убирает лишние отступы)
+            tg.expand();
+
+            // (Опционально) Можно получить данные пользователя Telegram
+            // const user = tg.initDataUnsafe.user;
+            // console.log('Пользователь:', user);
+        } else {
+            console.log('Приложение открыто вне Telegram');
+        }
+    });
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower | Winplay</title>
+    <style>
+        :root {
+            --bg: #0f1115;
+            --card: #1c1f26;
+            --text: #e6e8ee;
+            --muted: #8b92a5;
+            --border: #2a2e39;
+            --accent: #5b8cff;
+            --gold: #ffd166;
+            --green: #22c55e;
+            --red: #ef4444;
+            --cyan: #22d3ee;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* ========== ШАПКА ========== */
+        .top-bar {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: #252932;
+            border-color: var(--accent);
+        }
+
+        .balance {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .balance b {
+            color: var(--gold);
+        }
+
+        /* ========== ИГРОВОЕ ПОЛЕ ========== */
+        .game-container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .board-wrap {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .cell {
+            flex: 1;
+            aspect-ratio: 1 / 1;
+            background: #2a2e39;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cell:hover:not(.disabled):not(.opened) {
+            transform: translateY(-3px) scale(1.05);
+            background: #3f4555;
+            border-color: var(--cyan);
+            box-shadow: 0 5px 15px rgba(34, 211, 238, 0.3);
+        }
+
+        .cell.disabled {
+            cursor: default;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .cell.opened {
+            background: #0f1115;
+            cursor: default;
+            pointer-events: none;
+            transform: scale(0.95);
+            border-color: transparent;
+        }
+
+        .cell.safe {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .cell.bomb {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .cell.active {
+            border-color: rgba(255, 209, 102, 0.5);
+            box-shadow: 0 0 10px rgba(255, 209, 102, 0.2);
+        }
+
+        .icon {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5) rotate(-15deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        /* ========== ПАНЕЛЬ УПРАВЛЕНИЯ ========== */
+        .controls {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-size: 0.85rem;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--accent);
+        }
+
+        .input-group input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Выбор количества бомб */
+        .bombs-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .bomb-btn {
+            padding: 12px 0;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bomb-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+        }
+
+        .bomb-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(91, 140, 255, 0.3);
+        }
+
+        .bomb-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .bombs-info {
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-align: center;
+            margin-top: -6px;
+        }
+
+        /* Кнопки действий */
+        .action-btn {
+            width: 100%;
+            padding: 18px;
+            border-radius: 14px;
+            border: none;
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .action-btn.start {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+
+        .action-btn.cashout {
+            background: linear-gradient(135deg, #ffd166, #f59e0b);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(255, 209, 102, 0.3);
+        }
+
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .action-btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* ========== ОВЕРЛЕЙ ========== */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 17, 21, 0.85);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .overlay-card {
+            background: var(--card);
+            padding: 40px;
+            border-radius: 24px;
+            text-align: center;
+            max-width: 350px;
+            width: 90%;
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid var(--border);
+        }
+
+        .overlay.show .overlay-card {
+            transform: translateY(0);
+        }
+
+        .overlay-card h2 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        .overlay-card h2.win { color: var(--green); }
+        .overlay-card h2.lose { color: var(--red); }
+
+        .overlay-card .amount {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--gold);
+            margin-bottom: 25px;
+        }
+
+        .overlay-card .btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .controls {
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Шапка -->
+    <div class="top-bar">
+        <a href="index.html" class="btn">← В лобби</a>
+        <div class="balance">Баланс: <b id="balance">0.00</b> ₽</div>
+    </div>
+
+    <!-- Игра -->
+    <div class="game-container">
+        
+        <!-- Поле -->
+        <div class="board-wrap" id="board">
+            <!-- Генерируется через JS -->
+        </div>
+
+        <!-- Панель управления -->
+        <div class="controls">
+            <div class="input-group">
+                <label>Сумма ставки (₽)</label>
+                <input type="number" id="bet" value="10.00" min="1" step="0.01">
+            </div>
+
+            <div class="input-group">
+                <label>Количество бомб в ряду</label>
+                <div class="bombs-grid" id="bombsGrid">
+                    <button class="bomb-btn" data-b="1" onclick="setBombs(1)">1</button>
+                    <button class="bomb-btn active" data-b="2" onclick="setBombs(2)">2</button>
+                    <button class="bomb-btn" data-b="3" onclick="setBombs(3)">3</button>
+                    <button class="bomb-btn" data-b="4" onclick="setBombs(4)">4</button>
+                </div>
+                <div class="bombs-info" id="bombsInfo">2 бомбы — множитель за уровень ×2.48</div>
+            </div>
+
+            <button class="action-btn start" id="startBtn" onclick="startGame()">Начать игру</button>
+            
+            <button class="action-btn cashout" id="cashoutBtn" onclick="cashout()" disabled>
+                Забрать <span id="cashoutAmt">0.00</span> ₽
+            </button>
+        </div>
+    </div>
+
+    <!-- Оверлей победы/проигрыша -->
+    <div class="overlay" id="overlay">
+        <div class="overlay-card">
+            <h2 id="ovTitle" class="win">🎉</h2>
+            <div class="amount" id="ovAmount">0.00 ₽</div>
+            <button class="btn" onclick="closeOverlay()">Продолжить</button>
+        </div>
+    </div>
+
+    <script>
+        /* ========== КЛЮЧИ ХРАНИЛИЩА ========== */
+        const U_KEY = 'roulette_users_v1';
+        const S_KEY = 'roulette_session_v1';
+        const G_KEY = 'roulette_game_settings_v1';
+
+        const load = (k, d) => {
+            try {
+                const r = localStorage.getItem(k);
+                return r ? JSON.parse(r) : d;
+            } catch (e) { return d; }
+        };
+        const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+        let users = load(U_KEY, {});
+        let curUser = load(S_KEY, null);
+
+        // Защита: если не авторизован — выкидываем в лобби
+        if (!curUser || !users[curUser]) {
+            location.href = 'index.html';
+        }
+
+        // Загружаем настройки игры
+        const gameSettings = load(G_KEY, {});
+        const towerSettings = gameSettings.tower || { enabled: true, minBet: 10, maxBet: 10000, winChance: 50 };
+
+        if (towerSettings.enabled === false) {
+            alert('Игра находится на техническом перерыве');
+            location.href = 'index.html';
+        }
+
+        /* ========== ЛОГИКА ИГРЫ ========== */
+        const ROWS = 8;
+        const COLS = 5;
+
+        let state = {
+            active: false,
+            bet: 0,
+            bombs: 2,
+            level: 0,
+            mult: 1,
+            board: [],
+            busy: false
+        };
+
+        /* ========== УТИЛИТЫ ========== */
+        function getBal() {
+            return users[curUser] ? users[curUser].balance : 0;
+        }
+
+        function setBal(v) {
+            if (!users[curUser]) return;
+            users[curUser].balance = Math.max(0, parseFloat(v.toFixed(2)));
+            save(U_KEY, users);
+            document.getElementById('balance').textContent = getBal().toFixed(2);
+        }
+
+        function addWager(amt) {
+            if (!users[curUser].wagerRequired) return;
+            users[curUser].wagerProgress = (users[curUser].wagerProgress || 0) + amt;
+            if (users[curUser].wagerProgress >= users[curUser].wagerRequired) {
+                users[curUser].wagerRequired = 0;
+                users[curUser].wagerProgress = 0;
+            }
+            save(U_KEY, users);
+        }
+
+        function calcMult(level, bombs) {
+            const safeCells = COLS - bombs;
+            const fairMult = Math.pow(COLS / safeCells, level);
+            return Math.max(1, fairMult * 0.97);
+        }
+
+        /* ========== ВЫБОР БОМБ ========== */
+        function setBombs(b) {
+            if (state.active) return; 
+            state.bombs = b;
+            document.querySelectorAll('.bomb-btn').forEach((btn) => {
+                btn.classList.toggle('active', Number(btn.dataset.b) === b);
+            });
+            const perLevel = calcMult(1, b);
+            document.getElementById('bombsInfo').textContent =
+                `${b} ${b === 1 ? 'бомба' : b < 5 ? 'бомбы' : 'бомб'} — множитель за уровень ×${perLevel.toFixed(2)}`;
+        }
+
+        /* ========== ОТРИСОВКА ПОЛЯ ========== */
+        function buildBoard() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+
+            for (let r = ROWS - 1; r >= 0; r--) {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'row';
+
+                for (let c = 0; c < COLS; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+
+                    if (!state.active || r > state.level) {
+                        cell.classList.add('disabled');
+                    }
+                    
+                    if (state.active && r === state.level) {
+                        cell.classList.add('active');
+                    }
+
+                    if (state.active && r < state.level) {
+                        cell.classList.add('opened', 'safe');
+                    }
+
+                    cell.onclick = () => clickCell(r, c);
+                    rowEl.appendChild(cell);
+                }
+                boardEl.appendChild(rowEl);
+            }
+        }
+
+        /* ========== СТАРТ ИГРЫ ========== */
+        function startGame() {
+            if (state.active) return;
+
+            const bet = parseFloat(document.getElementById('bet').value);
+            if (!bet || bet <= 0) return alert('Введите ставку');
+
+            if (bet < towerSettings.minBet) return alert(`Мин. ставка: ${towerSettings.minBet} ₽`);
+            if (bet > towerSettings.maxBet) return alert(`Макс. ставка: ${towerSettings.maxBet} ₽`);
+
+            if (bet > getBal()) return alert('Недостаточно средств');
+
+            setBal(getBal() - bet);
+            addWager(bet);
+
+            // ЗАПИСЬ СТАВКИ
+            users[curUser].totalBets = (users[curUser].totalBets || 0) + bet;
+            if (!users[curUser].history) users[curUser].history = [];
+            users[curUser].history.unshift({ type: 'bet', amount: bet, date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }), details: 'Tower игра' });
+            if (users[curUser].history.length > 20) users[curUser].history.pop();
+            save(U_KEY, users);
+
+            state = {
+                active: true,
+                bet: bet,
+                bombs: state.bombs,
+                level: 0,
+                mult: 1,
+                board: [],
+                busy: false
+            };
+
+            for (let r = 0; r < ROWS; r++) {
+                const row = Array(COLS).fill(0);
+                let placed = 0;
+                while (placed < state.bombs) {
+                    const idx = Math.floor(Math.random() * COLS);
+                    if (row[idx] === 0) {
+                        row[idx] = 1;
+                        placed++;
+                    }
+                }
+                state.board.push(row);
+            }
+
+            document.getElementById('bet').disabled = true;
+            document.querySelectorAll('.bomb-btn').forEach(b => b.disabled = true);
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('cashoutBtn').disabled = true;
+
+            buildBoard();
+        }
+
+        /* ========== КЛИК ПО КЛЕТКЕ ========== */
+        function clickCell(r, c) {
+            if (!state.active || state.busy || r !== state.level) return;
+            state.busy = true;
+
+            // Подмена логики под шанс из админки
+            const adminWinChance = towerSettings.winChance !== undefined ? towerSettings.winChance : 50;
+            const isAdminWin = (Math.random() * 100) < adminWinChance;
+
+            if (isAdminWin) {
+                if (state.board[r][c] === 1) {
+                    for (let i = 0; i < COLS; i++) {
+                        if (state.board[r][i] === 0) {
+                            state.board[r][c] = 0;
+                            state.board[r][i] = 1;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                if (state.board[r][c] === 0) {
+                    for (let i = 0; i < COLS; i++) {
+                        if (state.board[r][i] === 1) {
+                            state.board[r][c] = 1;
+                            state.board[r][i] = 0;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            const isBomb = state.board[r][c] === 1;
+            const clickedEl = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+            
+            for (let i = 0; i < COLS; i++) {
+                if (state.board[r][i] === 1) {
+                    const bombEl = document.querySelector(`.cell[data-r="${r}"][data-c="${i}"]`);
+                    if (bombEl) {
+                        setTimeout(() => {
+                            bombEl.classList.add('opened', 'bomb');
+                            bombEl.innerHTML = '<span class="icon">💣</span>';
+                        }, i * 100);
+                    }
+                }
+            }
+
+            if (isBomb) {
+                clickedEl.classList.add('opened', 'bomb');
+                clickedEl.innerHTML = '<span class="icon">💣</span>';
+                state.active = false;
+                
+                setTimeout(() => {
+                    showOverlay(false, 0, `Вы попали на бомбу. Ставка ${state.bet.toFixed(2)} ₽ сгорела.`);
+                }, 1200);
+
+            } else {
+                clickedEl.classList.add('opened', 'safe');
+                clickedEl.innerHTML = '<span class="icon">💎</span>';
+
+                setTimeout(() => {
+                    state.level++;
+                    state.mult = calcMult(state.level, state.bombs);
+
+                    if (state.level >= ROWS) {
+                        cashout();
+                        return;
+                    }
+
+                    state.busy = false;
+                    
+                    document.getElementById('cashoutBtn').disabled = false;
+                    document.getElementById('cashoutAmt').textContent = (state.bet * state.mult).toFixed(2);
+
+                    document.querySelectorAll(`.cell[data-r="${state.level}"]`).forEach(el => {
+                        el.classList.remove('disabled');
+                        el.classList.add('active');
+                    });
+                }, 600);
+            }
+        }
+
+        /* ========== КЭШАУТ ========== */
+        function cashout() {
+            if (!state.active || state.level === 0) return;
+            
+            const winAmount = state.bet * state.mult;
+            setBal(getBal() + winAmount);
+            addWager(0);
+
+            // История
+            users[curUser].history.unshift({ type: 'win', amount: winAmount, date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }), details: 'Tower выигрыш' });
+            if (users[curUser].history.length > 20) users[curUser].history.pop();
+            save(U_KEY, users);
+
+            showOverlay(true, winAmount, `Вы забрали выигрыш на уровне ${state.level}`);
+        }
+
+        /* ========== ОВЕРЛЕЙ ========== */
+        function showOverlay(isWin, amount, subtitle) {
+            state.active = false;
+            const ov = document.getElementById('overlay');
+            const title = document.getElementById('ovTitle');
+            const amt = document.getElementById('ovAmount');
+
+            if (isWin) {
+                title.textContent = '🎉 Победа!';
+                title.className = 'win';
+                amt.textContent = `+${amount.toFixed(2)} ₽`;
+                amt.style.color = 'var(--gold)';
+            } else {
+                title.textContent = '💥 Проигрыш';
+                title.className = 'lose';
+                amt.textContent = `-${state.bet.toFixed(2)} ₽`;
+                amt.style.color = 'var(--red)';
+            }
+
+            ov.classList.add('show');
+        }
+
+        function closeOverlay() {
+            document.getElementById('overlay').classList.remove('show');
+            
+            document.getElementById('bet').disabled = false;
+            document.querySelectorAll('.bomb-btn').forEach(b => b.disabled = false);
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('cashoutBtn').disabled = true;
+            document.getElementById('cashoutAmt').textContent = '0.00';
+            
+            buildBoard();
+        }
+
+        /* ========== ИНИЦИАЛИЗАЦИЯ ========== */
+        document.getElementById('balance').textContent = getBal().toFixed(2);
+        buildBoard();
+        setBombs(state.bombs);
+    </script>
+</body>
+</html>

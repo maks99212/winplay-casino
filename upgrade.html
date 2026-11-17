@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- Подключаем официальный SDK Telegram -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<script>
+    // Ждём, пока SDK загрузится
+    window.addEventListener('load', function() {
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            
+            // Сообщаем Telegram, что приложение готово
+            tg.ready();
+            
+            // Разворачиваем приложение на весь экран (убирает лишние отступы)
+            tg.expand();
+
+            // (Опционально) Можно получить данные пользователя Telegram
+            // const user = tg.initDataUnsafe.user;
+            // console.log('Пользователь:', user);
+        } else {
+            console.log('Приложение открыто вне Telegram');
+        }
+    });
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upgrade | Winplay</title>
+    <style>
+        :root {
+            --bg: #0f1115;
+            --card: #1c1f26;
+            --text: #e6e8ee;
+            --muted: #8b92a5;
+            --border: #2a2e39;
+            --accent: #5b8cff;
+            --gold: #ffd166;
+            --green: #22c55e;
+            --red: #ef4444;
+            --purple: #8b5cf6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========== ШАПКА ========== */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 17, 21, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.4rem;
+            color: #fff;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+        .logo span { color: var(--accent); }
+
+        .user-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .balance {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .balance b { color: var(--gold); }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: #252932;
+            transform: translateY(-1px);
+        }
+        .btn-primary {
+            background: var(--accent);
+            border: none;
+            color: #fff;
+        }
+        .btn-primary:hover { background: #4a7aff; }
+
+        .profile-widget {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--card);
+            padding: 4px 12px 4px 4px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: var(--text);
+        }
+        .profile-widget:hover { border-color: var(--accent); }
+        .avatar-mini {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .profile-id {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        /* ========== ОСНОВНОЙ КОНТЕНТ ========== */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .back-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .back-btn:hover { color: #fff; border-color: #fff; }
+
+        /* ========== UPGRADE ========== */
+        .upgrade-layout {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            max-width: 900px;
+            margin: 0 auto 50px;
+            animation: fade 0.3s ease-out;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            border: 6px solid var(--card);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Фиолетовая (выигрышная) и красная (проигрышная) зоны */
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            /* Фон задается через JS conic-gradient */
+            background: conic-gradient(var(--purple) 0% 50%, var(--red) 50% 100%);
+            transition: background 0.3s;
+        }
+
+        /* Центральный круг, чтобы стрелка не перекрывала центр */
+        .wheel-center {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: var(--card);
+            border-radius: 50%;
+            z-index: 10;
+            border: 2px solid var(--border);
+        }
+
+        /* Стрелка */
+        .arrow-wrap {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 150px;
+            transform-origin: bottom center;
+            transform: translate(-50%, -100%) rotate(0deg);
+            transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .arrow {
+            width: 4px;
+            height: 100%;
+            background: #fff;
+            position: relative;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Наконечник стрелки */
+        .arrow::after {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: -8px;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 16px solid #fff;
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+        }
+
+        .controls-panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 24px;
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-row input {
+            flex: 1;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            border-color: var(--accent);
+        }
+        .form-group input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .mult-display {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .mult-display .lbl {
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+        .mult-display .val {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--gold);
+        }
+
+        .play-btn {
+            width: 100%;
+            padding: 18px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .play-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+        .play-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            background: var(--border);
+        }
+
+        /* ========== ТОСТ ========== */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px 20px;
+            border-radius: 12px;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            max-width: 340px;
+            font-weight: 600;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.win { border-color: var(--green); color: var(--green); }
+        .toast.lose { border-color: var(--red); color: var(--red); }
+
+        @media (max-width: 768px) {
+            .upgrade-layout {
+                flex-direction: column;
+            }
+            .controls-panel {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-inner">
+            <a class="logo" href="index.html">Win<span>play</span></a>
+
+            <div class="user-box" id="userBox" style="display:none;">
+                <div class="balance">Баланс: <b id="balanceDisplay">0.00</b> ₽</div>
+                <a class="profile-widget" href="profile.html">
+                    <div class="avatar-mini" id="headerAvatar">👤</div>
+                    <div class="profile-id" id="headerId">#0000</div>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="game-header">
+            <a class="back-btn" href="index.html">← В лобби</a>
+            <h2>🚀 Upgrade</h2>
+        </div>
+
+        <div class="upgrade-layout">
+            <!-- Колесо -->
+            <div class="wheel-container">
+                <div class="wheel" id="wheelBg"></div>
+                <div class="wheel-center"></div>
+                
+                <!-- Стрелка, которая вращается -->
+                <div class="arrow-wrap" id="arrowWrap">
+                    <div class="arrow"></div>
+                </div>
+            </div>
+
+            <!-- Панель управления -->
+            <div class="controls-panel">
+                <div class="form-group">
+                    <label>Сумма ставки (₽)</label>
+                    <input type="number" id="betAmount" value="10" min="1" step="1">
+                </div>
+
+                <div class="form-group">
+                    <label>Шанс выигрыша (%)</label>
+                    <input type="number" id="chanceInput" value="50" min="1" max="99" step="1" oninput="updateMultiplier()">
+                </div>
+
+                <div class="mult-display">
+                    <span class="lbl">Множитель</span>
+                    <span class="val" id="multVal">x1.98</span>
+                </div>
+
+                <button class="play-btn" id="playBtn" onclick="playUpgrade()">Апгрейд</button>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        /* ========== КЛЮЧИ ХРАНИЛИЩА ========== */
+        const U_KEY = 'roulette_users_v1';
+        const S_KEY = 'roulette_session_v1';
+        const G_KEY = 'roulette_game_settings_v1';
+
+        /* ========== ЗАГРУЗКА И СОХРАНЕНИЕ ========== */
+        function load(key, defaultValue) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw) {
+                    return JSON.parse(raw);
+                } else {
+                    return defaultValue;
+                }
+            } catch (error) {
+                return defaultValue;
+            }
+        }
+
+        function save(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        /* ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ========== */
+        let users = load(U_KEY, {});
+        let curUser = load(S_KEY, null);
+
+        if (!curUser || !users[curUser]) {
+            location.href = 'index.html';
+        }
+
+        // Настройки игры из админки
+        const gameSettings = load(G_KEY, {});
+        const upgradeSettings = gameSettings.upgrade || { enabled: true, minBet: 10, maxBet: 10000 };
+
+        if (upgradeSettings.enabled === false) {
+            alert('Игра находится на техническом перерыве');
+            location.href = 'index.html';
+        }
+
+        /* ========== СОСТОЯНИЕ ИГРЫ ========== */
+        let isSpinning = false;
+        let currentRotation = 0; // Текущий угол поворота стрелки
+
+        /* ========== УТИЛИТЫ ========== */
+        function getBal() {
+            if (!curUser || !users[curUser]) {
+                return 0;
+            }
+            return users[curUser].balance || 0;
+        }
+
+        function setBal(value) {
+            if (!curUser || !users[curUser]) {
+                return;
+            }
+            let newBalance = parseFloat(value.toFixed(2));
+            if (newBalance < 0) {
+                newBalance = 0;
+            }
+            users[curUser].balance = newBalance;
+            save(U_KEY, users);
+            refreshUI();
+        }
+
+        function addWager(amount) {
+            if (!curUser || !users[curUser]) {
+                return;
+            }
+            if (!users[curUser].wagerRequired) {
+                return;
+            }
+            users[curUser].wagerProgress = (users[curUser].wagerProgress || 0) + amount;
+            if (users[curUser].wagerProgress >= users[curUser].wagerRequired) {
+                users[curUser].wagerRequired = 0;
+                users[curUser].wagerProgress = 0;
+                showToast('🎉 Вейджер отыгран! Средства разблокированы.', 'win');
+            }
+            save(U_KEY, users);
+        }
+
+        function showToast(text, type) {
+            if (!type) {
+                type = '';
+            }
+            const toast = document.getElementById('toast');
+            toast.textContent = text;
+            toast.className = 'toast show ' + type;
+
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function refreshUI() {
+            const userBox = document.getElementById('userBox');
+            if (!curUser || !users[curUser]) {
+                userBox.style.display = 'none';
+                return;
+            }
+            userBox.style.display = 'flex';
+
+            const user = users[curUser];
+            let cleanId = String(user.id || '');
+            while (cleanId.length < 4) {
+                cleanId = '0' + cleanId;
+            }
+
+            document.getElementById('balanceDisplay').textContent = getBal().toFixed(2);
+            document.getElementById('headerAvatar').textContent = user.avatar || '👤';
+            document.getElementById('headerId').textContent = '#' + cleanId;
+        }
+
+        /* ========== ЛОГИКА UPGRADE ========== */
+        
+        // Обновление множителя и визуального сектора при вводе шанса
+        function updateMultiplier() {
+            const chanceInput = document.getElementById('chanceInput');
+            let chance = parseFloat(chanceInput.value);
+
+            // Валидация
+            if (isNaN(chance)) chance = 1;
+            if (chance < 1) chance = 1;
+            if (chance > 99) chance = 99;
+
+            // Множитель = 99 / chance (закладываем 1% комиссии)
+            const mult = 99 / chance;
+            document.getElementById('multVal').textContent = 'x' + mult.toFixed(2);
+
+            // Обновляем визуальный сектор (фиолетовый - шанс выигрыша, красный - остальное)
+            const wheelBg = document.getElementById('wheelBg');
+            wheelBg.style.background = 'conic-gradient(var(--purple) 0% ' + chance + '%, var(--red) ' + chance + '% 100%)';
+        }
+
+        // Запуск игры
+        function playUpgrade() {
+            if (isSpinning) {
+                return;
+            }
+
+            const betInput = document.getElementById('betAmount');
+            const chanceInput = document.getElementById('chanceInput');
+            
+            const bet = parseFloat(betInput.value);
+            let chance = parseFloat(chanceInput.value);
+
+            if (!bet || bet <= 0) {
+                showToast('Введите корректную ставку', 'lose');
+                return;
+            }
+            if (!chance || chance < 1 || chance > 99) {
+                showToast('Шанс должен быть от 1 до 99%', 'lose');
+                return;
+            }
+            if (bet < upgradeSettings.minBet) {
+                showToast('Мин. ставка: ' + upgradeSettings.minBet + ' ₽', 'lose');
+                return;
+            }
+            if (bet > upgradeSettings.maxBet) {
+                showToast('Макс. ставка: ' + upgradeSettings.maxBet + ' ₽', 'lose');
+                return;
+            }
+            if (bet > getBal()) {
+                showToast('Недостаточно средств', 'lose');
+                return;
+            }
+
+            // Списываем ставку
+            setBal(getBal() - bet);
+            addWager(bet);
+
+            // Статистика
+            users[curUser].totalBets = (users[curUser].totalBets || 0) + bet;
+            if (!users[curUser].history) {
+                users[curUser].history = [];
+            }
+            users[curUser].history.unshift({
+                type: 'bet',
+                amount: bet,
+                date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                details: 'Upgrade игра (' + chance + '%)'
+            });
+            if (users[curUser].history.length > 20) {
+                users[curUser].history.pop();
+            }
+            save(U_KEY, users);
+
+            // Блокировка UI
+            isSpinning = true;
+            const playBtn = document.getElementById('playBtn');
+            playBtn.disabled = true;
+            playBtn.textContent = 'Крутим...';
+            betInput.disabled = true;
+            chanceInput.disabled = true;
+
+            // Определяем выигрыш (честный рандом)
+            const isWin = (Math.random() * 100) < chance;
+
+            // Вычисляем целевую точку на колесе
+            let targetAngle = 0;
+
+            if (isWin) {
+                // Если выигрыш — стрелка должна упасть в фиолетовую зону (от 0 до chance%)
+                const maxAngleForWin = (chance / 100) * 360;
+                targetAngle = Math.random() * maxAngleForWin;
+            } else {
+                // Если проигрыш — стрелка падает в красную зону (от chance% до 100%)
+                const startAngleLose = (chance / 100) * 360;
+                const endAngleLose = 360;
+                targetAngle = startAngleLose + Math.random() * (endAngleLose - startAngleLose);
+            }
+
+            // Чтобы стрелка крутилась красиво, добавляем полные обороты (5 кругов)
+            // Находим текущее положение стрелки
+            const currentMod = currentRotation % 360;
+            // Вычисляем, сколько градусов нужно добавить, чтобы достичь targetAngle
+            let delta = targetAngle - currentMod;
+            if (delta < 0) {
+                delta += 360;
+            }
+
+            // Итоговый угол: текущий + 5 полных оборотов + дельта
+            currentRotation = currentRotation + (360 * 5) + delta;
+
+            // Запускаем анимацию
+            const arrowWrap = document.getElementById('arrowWrap');
+            arrowWrap.style.transform = 'translate(-50%, -100%) rotate(' + currentRotation + 'deg)';
+
+            // Ждём окончания анимации (4 секунды по CSS)
+            setTimeout(function() {
+                resolveGame(isWin, bet, chance);
+            }, 4100);
+        }
+
+        // Обработка результата после остановки стрелки
+        function resolveGame(isWin, bet, chance) {
+            const mult = 99 / chance;
+            
+            if (isWin) {
+                const winAmount = bet * mult;
+                setBal(getBal() + winAmount);
+                showToast('🎉 Выигрыш! +' + winAmount.toFixed(2) + ' ₽ (x' + mult.toFixed(2) + ')', 'win');
+
+                // История
+                users[curUser].history.unshift({
+                    type: 'win',
+                    amount: winAmount,
+                    date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                    details: 'Upgrade выигрыш (x' + mult.toFixed(2) + ')'
+                });
+                if (users[curUser].history.length > 20) {
+                    users[curUser].history.pop();
+                }
+                save(U_KEY, users);
+            } else {
+                showToast('Проигрыш −' + bet.toFixed(2) + ' ₽', 'lose');
+            }
+
+            // Разблокировка UI
+            isSpinning = false;
+            const playBtn = document.getElementById('playBtn');
+            playBtn.disabled = false;
+            playBtn.textContent = 'Апгрейд';
+            document.getElementById('betAmount').disabled = false;
+            document.getElementById('chanceInput').disabled = false;
+        }
+
+        /* ========== ИНИЦИАЛИЗАЦИЯ ========== */
+        function init() {
+            refreshUI();
+            updateMultiplier();
+        }
+
+        init();
+    </script>
+</body>
+</html>
