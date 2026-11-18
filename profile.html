@@ -1203,11 +1203,11 @@
         }
 
         /* ========== РЕФЕРАЛЫ (Обновлено для Telegram) ========== */
-                function renderReferrals(user) {
-            // Твой юзернейм бота (без @)
+        function renderReferrals(user) {
+            // Юзернейм твоего бота (без @)
             const botUsername = 'WinplayCasinoBot';
             
-            // Ссылка формата Main Mini App (без short name)
+            // Формируем правильную ссылку на бота с параметром startapp
             const refLink = 'https://t.me/' + botUsername + '?startapp=' + encodeURIComponent(curUser);
 
             document.getElementById('refLinkInput').value = refLink;
