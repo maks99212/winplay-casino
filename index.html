@@ -1,29 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <!-- Подключаем официальный SDK Telegram -->
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-<script>
-    // Ждём, пока SDK загрузится
-    window.addEventListener('load', function() {
-        if (window.Telegram && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
-            
-            // Сообщаем Telegram, что приложение готово
-            tg.ready();
-            
-            // Разворачиваем приложение на весь экран (убирает лишние отступы)
-            tg.expand();
-
-            // (Опционально) Можно получить данные пользователя Telegram
-            // const user = tg.initDataUnsafe.user;
-            // console.log('Пользователь:', user);
-        } else {
-            console.log('Приложение открыто вне Telegram');
-        }
-    });
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Winplay — Играй и выигрывай</title>
@@ -762,7 +739,15 @@
             const login = loginInput.value.trim().toLowerCase();
             const password = passwordInput.value;
             const nick = nickInput.value.trim();
-            const ref = refInput.value.trim();
+            
+            // Проверяем, ввел ли пользователь код вручную. Если нет - берем из ссылки.
+            let ref = refInput.value.trim();
+            if (!ref) {
+                let pendingRef = localStorage.getItem('winplay_pending_ref');
+                if (pendingRef) {
+                    ref = pendingRef;
+                }
+            }
 
             errorEl.textContent = '';
 
@@ -817,6 +802,9 @@
 
             save(S_KEY, login);
             curUser = login;
+            
+            // Очищаем реф-ссылку после входа, чтобы не мешала
+            localStorage.removeItem('winplay_pending_ref');
 
             closeAuth();
             refreshUI();
@@ -868,6 +856,7 @@
                 activePromo: null
             };
 
+            // Привязка реферала
             if (ref) {
                 const refLogin = ref.toLowerCase();
                 if (users[refLogin] && refLogin !== login) {
@@ -883,6 +872,9 @@
             save(U_KEY, users);
             save(S_KEY, login);
             curUser = login;
+
+            // Очищаем реф-ссылку после регистрации
+            localStorage.removeItem('winplay_pending_ref');
 
             closeAuth();
             refreshUI();
@@ -1004,6 +996,13 @@
         function init() {
             users = load(U_KEY, {});
             curUser = load(S_KEY, null);
+
+            // Читаем реферальный код из ссылки (например, index.html?ref=admin)
+            let urlParams = new URLSearchParams(window.location.search);
+            let refParam = urlParams.get('ref');
+            if (refParam) {
+                localStorage.setItem('winplay_pending_ref', refParam.toLowerCase());
+            }
 
             if (curUser) {
                 if (!users[curUser]) {
