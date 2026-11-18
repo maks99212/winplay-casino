@@ -27,7 +27,6 @@
             min-height: 100vh;
         }
 
-        /* ========== ЭКРАН ВХОДА ========== */
         .login-overlay {
             position: fixed; inset: 0;
             background: rgba(15, 17, 21, 0.98);
@@ -58,7 +57,6 @@
         .login-hint { margin-top: 15px; font-size: 0.8rem; color: var(--muted); }
         .login-hint a { color: var(--accent); text-decoration: none; font-weight: 600; }
 
-        /* ========== БОКОВОЕ МЕНЮ ========== */
         .sidebar {
             width: 250px; background: var(--card); border-right: 1px solid var(--border);
             padding: 20px 0; flex-shrink: 0; display: flex; flex-direction: column;
@@ -78,7 +76,6 @@
         }
         .sidebar-footer { margin-top: auto; padding: 20px; }
 
-        /* ========== ОСНОВНОЙ КОНТЕНТ ========== */
         .main { flex: 1; padding: 30px; overflow-y: auto; max-height: 100vh; display: none; }
         .tab-content { display: none; animation: fade 0.3s ease-out; }
         .tab-content.active { display: block; }
@@ -259,6 +256,7 @@
                                 <th>Пароль (Хеш)</th>
                                 <th>Баланс</th>
                                 <th>Вейджер</th>
+                                <th>Рефералы</th>
                                 <th>Статус</th>
                                 <th>Действия</th>
                             </tr>
@@ -308,15 +306,15 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Время на активацию (часы)</label>
-                        <input type="number" id="pActivateLimit" placeholder="24" value="24" step="1" title="Время после создания, в течение которого промокод можно ввести">
+                        <input type="number" id="pActivateLimit" placeholder="24" value="24" step="1">
                     </div>
                     <div class="form-group">
                         <label>Время на депозит (часы)</label>
-                        <input type="number" id="pDepositLimit" placeholder="12" value="12" step="1" title="Сколько времени дается игроку на пополнение после активации">
+                        <input type="number" id="pDepositLimit" placeholder="12" value="12" step="1">
                     </div>
                     <div class="form-group">
                         <label>Множитель вейджера (x)</label>
-                        <input type="number" id="pWager" placeholder="3" value="3" step="1" title="Сколько раз нужно отыграть бонус">
+                        <input type="number" id="pWager" placeholder="3" value="3" step="1">
                     </div>
                     <button class="btn btn-primary" style="height:42px;" onclick="createPromo()">Создать</button>
                 </div>
@@ -347,7 +345,6 @@
         <div class="tab-content" id="tab-deposits">
             <div class="section">
                 <h2>⚙️ Глобальные лимиты депозита</h2>
-                <p>Единые ограничения на сумму пополнения для всех методов.</p>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Мин. сумма (₽)</label>
@@ -422,7 +419,6 @@
         <div class="tab-content" id="tab-withdrawals">
             <div class="section">
                 <h2>⚙️ Глобальные лимиты вывода</h2>
-                <p>Единые ограничения на сумму вывода для всех методов.</p>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Мин. сумма (₽)</label>
@@ -522,7 +518,6 @@
             const key = document.getElementById('adminKey').value;
             const storedKey = localStorage.getItem('admin_access_key');
             
-            // Получаем сохраненный пароль. Если его нет, используем 'admin' по умолчанию.
             let storedPass = localStorage.getItem('admin_password_v1');
             if (!storedPass) {
                 storedPass = 'admin';
@@ -566,14 +561,12 @@
                 return;
             }
 
-            // Сохраняем новый пароль
             localStorage.setItem('admin_password_v1', newPass);
             
-            // Очищаем поля
             newPassInput.value = '';
             confirmPassInput.value = '';
 
-            alert('Пароль успешно изменен! При следующем входе используйте новый пароль.');
+            alert('Пароль успешно изменен!');
         }
 
         /* ========== ЗАЩИТА ОТ XSS ========== */
@@ -669,7 +662,6 @@
             renderMethods();
             renderRequests();
             
-            // Подгружаем текущие лимиты в поля ввода
             const limits = loadGlobalLimits();
             if (document.getElementById('globalDepMin')) {
                 document.getElementById('globalDepMin').value = limits.depositMin;
@@ -719,7 +711,7 @@
             const logins = Object.keys(users);
 
             if (logins.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);">Нет игроков</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);">Нет игроков</td></tr>';
                 return;
             }
 
@@ -735,6 +727,12 @@
                     wagerHtml = '<span style="font-size:0.8rem; padding:2px 8px; border-radius:4px; background:rgba(91,140,255,0.1); color:var(--accent); border:1px solid rgba(91,140,255,0.3);">'
                         + progress.toFixed(2) + ' / ' + user.wagerRequired.toFixed(2) + ' ₽'
                         + '</span>';
+                }
+
+                // Подсчет рефералов
+                let refsCount = 0;
+                if (user.referrals) {
+                    refsCount = user.referrals.length;
                 }
 
                 let blockBtn = '';
@@ -780,17 +778,36 @@
                 html += '<td><span style="font-family:monospace; font-size:0.8rem; color:var(--muted);">' + escapeHTML(user.password || '—') + '</span></td>';
                 html += '<td><b style="color:var(--gold);">' + balance.toFixed(2) + ' ₽</b></td>';
                 html += '<td>' + wagerHtml + '</td>';
+                html += '<td><b style="color:var(--green);">' + refsCount + '</b></td>'; // Вывод кол-ва рефералов
                 html += '<td>' + statusHtml + '</td>';
                 html += '<td>';
                 html += '<button class="btn btn-green btn-sm" onclick="addBalance(\'' + login + '\', 100)">+100</button> ';
                 html += '<button class="btn btn-green btn-sm" onclick="addBalance(\'' + login + '\', 1000)">+1000</button> ';
                 html += '<button class="btn btn-red btn-sm" onclick="setZero(\'' + login + '\')">0</button> ';
+                html += '<button class="btn btn-primary btn-sm" onclick="addFakeReferral(\'' + login + '\')">+1 реф</button> '; // Кнопка для теста
                 html += blockBtn;
                 html += '</td>';
                 html += '</tr>';
             }
 
             tbody.innerHTML = html;
+        }
+
+        function addFakeReferral(login) {
+            let users = load(U_KEY, {});
+            if (!users[login]) {
+                return;
+            }
+            if (!users[login].referrals) {
+                users[login].referrals = [];
+            }
+            
+            // Генерируем тестовое имя
+            let fakeName = 'test_ref_' + Date.now();
+            users[login].referrals.push(fakeName);
+            save(U_KEY, users);
+            renderAll();
+            alert('Добавлен тестовый реферал для игрока ' + login);
         }
 
         function blockUser(login) {
@@ -1390,7 +1407,6 @@
                     let totalDep = users[request.login].totalDeposited || 0;
                     users[request.login].totalDeposited = totalDep + request.amount;
 
-                    /* Проверка активного промокода на депозит */
                     if (users[request.login].activePromo) {
                         const ap = users[request.login].activePromo;
 
@@ -1418,15 +1434,13 @@
                                 users[request.login].history.pop();
                             }
 
-                            alert('Депозит одобрен. Начислен бонус по промокоду: ' + bonusAmount.toFixed(2) + ' ₽ (Вейджер: ' + wagerNeeded.toFixed(2) + ' ₽)');
+                            alert('Депозит одобрен. Начислен бонус: ' + bonusAmount.toFixed(2) + ' ₽');
                         } else {
-                            alert('Депозит одобрен. Промокод истек по времени.');
+                            alert('Депозит одобрен. Промокод истек.');
                         }
-
                         delete users[request.login].activePromo;
                     }
 
-                    /* Реферальные */
                     if (users[request.login].referrer && users[users[request.login].referrer]) {
                         const refUser = users[request.login].referrer;
                         let refsCount = 0;
