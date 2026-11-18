@@ -1203,13 +1203,12 @@
         }
 
         /* ========== РЕФЕРАЛЫ (Обновлено для Telegram) ========== */
-        function renderReferrals(user) {
-            // Твой юзернейм бота и short_name приложения
-            const botUsername = 'WinplayCasinoBot'; 
-            const appShortName = 'winplay'; 
-
-            // Ссылка формата: https://t.me/БОТ/short_name?startapp=ЛОГИН
-            const refLink = 'https://t.me/' + botUsername + '/' + appShortName + '?startapp=' + encodeURIComponent(curUser);
+                function renderReferrals(user) {
+            // Твой юзернейм бота (без @)
+            const botUsername = 'WinplayCasinoBot';
+            
+            // Ссылка формата Main Mini App (без short name)
+            const refLink = 'https://t.me/' + botUsername + '?startapp=' + encodeURIComponent(curUser);
 
             document.getElementById('refLinkInput').value = refLink;
 
