@@ -337,6 +337,69 @@
             border-color: var(--accent);
         }
 
+        /* ========== FAQ (Вопросы и ответы) ========== */
+        .faq-container {
+            margin-bottom: 28px;
+            animation: fade 0.4s ease-out;
+        }
+
+        .faq-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .faq-question {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text);
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .faq-question:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .faq-icon {
+            font-size: 1.2rem;
+            color: var(--accent);
+            transition: transform 0.3s ease-out;
+            font-weight: 900;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
+            color: var(--gold);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+            padding: 0 20px;
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 300px; 
+            padding: 0 20px 16px 20px;
+        }
+
+        .faq-answer b {
+            color: var(--text);
+        }
+
         /* ========== НИЖНЯЯ ПАНЕЛЬ ========== */
         .bottom-bar {
             display: flex;
@@ -493,7 +556,6 @@
             </div>
 
             <div class="user-box" id="guestBox">
-                <!-- Кнопка жестко вызывает openAuth() -->
                 <button class="btn btn-primary" onclick="openAuth()">Войти / Регистрация</button>
             </div>
         </div>
@@ -546,6 +608,62 @@
         <div class="section-title">🎮 Игры</div>
         <div class="games-grid" id="gamesGrid">
             <!-- Игры будут добавлены через JS -->
+        </div>
+
+        <!-- ========== РАЗДЕЛ FAQ ========== -->
+        <div class="section-title" style="margin-top: 40px;">❓ Часто задаваемые вопросы</div>
+        <div class="faq-container">
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Как начать играть?</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Всё очень просто! Зарегистрируйтесь, зайдите в раздел <b>«Пополнить»</b> и выберите удобный метод оплаты. После зачисления средств выберите любую игру в лобби и делайте ставку.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Как быстро приходят депозиты?</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Обычно заявки на пополнение обрабатываются администратором в течение 5–15 минут. Если вы перевели средства, но баланс не обновился, подождите немного или напишите в поддержку.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Как вывести выигрыш?</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Перейдите в раздел <b>«Вывести»</b>, выберите метод, укажите сумму и ваши реквизиты. Заявка будет обработана вручную администратором. Средства списываются с баланса только после одобрения заявки.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Что такое Вейджер (Wager) и как его отыграть?</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Вейджер — это сумма, которую нужно проставить в играх, чтобы вывести средства, полученные с бонусов или промокодов. <b>Пример:</b> вы получили бонус 100 ₽ с вейджером x3. Значит, вам нужно сделать ставок на 300 ₽, чтобы разблокировать вывод этих денег. Прогресс отыгрывания всегда виден в профиле.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Как работает реферальная система?</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>В разделе <b>«Профиль»</b> у вас есть личная ссылка. Приглашайте по ней друзей. Когда ваш реферал пополняет баланс, вы автоматически получаете от <b>5% до 10%</b> от суммы его депозита на свой баланс. Чем больше у вас друзей, тем выше ваш процент!</p>
+                </div>
+            </div>
+
         </div>
 
         <div class="bottom-bar">
@@ -622,6 +740,23 @@
                 return 0;
             }
             return users[curUser].balance || 0;
+        }
+
+        /* ========== FAQ (Аккордеон) ========== */
+        function toggleFaq(element) {
+            const currentItem = element.parentElement;
+            const isActive = currentItem.classList.contains('active');
+
+            // Сначала закрываем все остальные открытые вопросы
+            const allItems = document.querySelectorAll('.faq-item');
+            for (let i = 0; i < allItems.length; i++) {
+                allItems[i].classList.remove('active');
+            }
+
+            // Если текущий не был открыт, открываем его
+            if (!isActive) {
+                currentItem.classList.add('active');
+            }
         }
 
         /* ========== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ========== */
@@ -944,7 +1079,6 @@
                 users = load(U_KEY, {});
                 curUser = load(S_KEY, null);
 
-                // Проверка Telegram
                 let refParam = null;
                 if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
                     refParam = window.Telegram.WebApp.initDataUnsafe.start_param;
@@ -975,7 +1109,6 @@
             }
         }
 
-        // Запуск после полной загрузки страницы
         window.addEventListener('load', function() {
             init();
         });
