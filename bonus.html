@@ -274,11 +274,16 @@
 
                 user.balance = (user.balance || 0) + 50;
                 user.tgBonusClaimed = true;
+                
+                // --- ДОБАВЛЯЕМ ВЕЙДЖЕР Х10 (50 руб * 10 = 500 руб) ---
+                user.wagerRequired = (user.wagerRequired || 0) + 500;
+                // ------------------------------------------------------
+
                 if (!user.history) user.history = [];
                 user.history.unshift({ type: 'win', amount: 50, date: new Date().toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' }), details: 'Бонус за подписку' });
                 if (user.history.length > 20) user.history.pop();
                 save(U_KEY, users); refreshUI();
-                showToast('🎉 +50 ₽ за подписку!', 'win');
+                showToast('🎉 +50 ₽ за подписку! (Вейджер х10)', 'win');
                 document.getElementById('tgBtn').textContent = 'Уже получено';
                 document.getElementById('tgBtn').disabled = true;
                 
