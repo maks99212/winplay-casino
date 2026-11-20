@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Winplay — Играй и выигрывай</title>
+    
+    <!-- Подключаем официальный SDK Telegram -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <style>
         :root {
             --bg: #0f1115;
@@ -489,6 +493,7 @@
             </div>
 
             <div class="user-box" id="guestBox">
+                <!-- Кнопка жестко вызывает openAuth() -->
                 <button class="btn btn-primary" onclick="openAuth()">Войти / Регистрация</button>
             </div>
         </div>
@@ -496,13 +501,11 @@
 
     <!-- ОСНОВНОЙ КОНТЕНТ -->
     <main>
-        <!-- ГЕРОЙ-БЛОК -->
         <div class="hero">
             <h1>Играй и <span>выигрывай</span></h1>
             <p>Добро пожаловать в Winplay — платформу с честными играми, быстрыми выплатами и щедрыми бонусами. Выбирай игру и начинай прямо сейчас.</p>
         </div>
 
-        <!-- БЫСТРЫЕ ДЕЙСТВИЯ -->
         <div class="quick-actions">
             <a class="action-card" href="deposit.html">
                 <div class="action-icon">💳</div>
@@ -534,18 +537,17 @@
             </a>
         </div>
 
-        <!-- ПРОМОКОД -->
         <div class="promo-box">
             <div class="promo-label">🎁 Промокод:</div>
             <input type="text" id="promoInput" placeholder="ВВЕДИТЕ КОД">
             <button class="btn btn-green" onclick="activatePromo()">Активировать</button>
         </div>
 
-        <!-- ИГРЫ -->
         <div class="section-title">🎮 Игры</div>
-        <div class="games-grid" id="gamesGrid"></div>
+        <div class="games-grid" id="gamesGrid">
+            <!-- Игры будут добавлены через JS -->
+        </div>
 
-        <!-- НИЖНЯЯ ПАНЕЛЬ -->
         <div class="bottom-bar">
             <a class="btn btn-primary" href="bonus.html">🎁 Бонусы</a>
             <a class="btn" href="profile.html">Мой профиль</a>
@@ -555,11 +557,29 @@
     <div class="toast" id="toast"></div>
 
     <script>
+        // Инициализация Telegram
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand();
+        }
+
         /* ========== КЛЮЧИ ХРАНИЛИЩА ========== */
         const U_KEY = 'roulette_users_v1';
         const S_KEY = 'roulette_session_v1';
         const P_KEY = 'roulette_promos_v1';
         const G_KEY = 'roulette_game_settings_v1';
+
+        /* ========== СПИСОК ИГР ========== */
+        const GAMES_LIST = [
+            { id: 'mines', name: 'Mines', icon: '💎', url: 'mines.html' },
+            { id: 'dice', name: 'Dice', icon: '🎲', url: 'dice.html' },
+            { id: 'tower', name: 'Tower', icon: '🗼', url: 'tower.html' },
+            { id: 'plinko', name: 'Plinko', icon: '🔴', url: 'plinko.html' },
+            { id: 'coinflip', name: 'Coinflip', icon: '🪙', url: 'coinflip.html' },
+            { id: 'roulette', name: 'Roulette', icon: '🎰', url: 'roulette.html' },
+            { id: 'upgrade', name: 'Upgrade', icon: '🚀', url: 'upgrade.html' },
+            { id: 'crash', name: 'Crash', icon: '📈', url: 'crash.html' }
+        ];
 
         /* ========== ЗАГРУЗКА И СОХРАНЕНИЕ ========== */
         function load(key, defaultValue) {
@@ -583,18 +603,6 @@
         let users = load(U_KEY, {});
         let curUser = load(S_KEY, null);
 
-        /* ========== СПИСОК ИГР ========== */
-        const GAMES_LIST = [
-            { id: 'mines', name: 'Mines', icon: '💎', url: 'mines.html' },
-            { id: 'dice', name: 'Dice', icon: '🎲', url: 'dice.html' },
-            { id: 'tower', name: 'Tower', icon: '🗼', url: 'tower.html' },
-            { id: 'plinko', name: 'Plinko', icon: '🔴', url: 'plinko.html' },
-            { id: 'coinflip', name: 'Coinflip', icon: '🪙', url: 'coinflip.html' },
-            { id: 'roulette', name: 'Roulette', icon: '🎰', url: 'roulette.html' },
-            { id: 'upgrade', name: 'Upgrade', icon: '🚀', url: 'upgrade.html' },
-            { id: 'crash', name: 'Crash', icon: '📈', url: 'crash.html' }
-        ];
-
         /* ========== УТИЛИТЫ ========== */
         function showToast(text, type) {
             if (!type) {
@@ -609,57 +617,11 @@
             }, 3000);
         }
 
-        function escapeHTML(str) {
-            if (!str) {
-                return '';
-            }
-            return String(str).replace(/[&<>'"]/g, function(tag) {
-                const map = {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    "'": '&#39;',
-                    '"': '&quot;'
-                };
-                if (map[tag]) {
-                    return map[tag];
-                } else {
-                    return tag;
-                }
-            });
-        }
-
         function getBal() {
-            if (!curUser) {
+            if (!curUser || !users[curUser]) {
                 return 0;
             }
-            if (!users[curUser]) {
-                return 0;
-            }
-            const balance = users[curUser].balance;
-            if (typeof balance === 'number') {
-                return balance;
-            } else {
-                return 0;
-            }
-        }
-
-        function setBal(value) {
-            if (!curUser) {
-                return;
-            }
-            if (!users[curUser]) {
-                return;
-            }
-
-            let newBalance = parseFloat(value.toFixed(2));
-            if (newBalance < 0) {
-                newBalance = 0;
-            }
-
-            users[curUser].balance = newBalance;
-            save(U_KEY, users);
-            refreshUI();
+            return users[curUser].balance || 0;
         }
 
         /* ========== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ========== */
@@ -896,11 +858,6 @@
                 return;
             }
 
-            if (!users[curUser]) {
-                showToast('Сначала войдите в аккаунт', 'lose');
-                return;
-            }
-
             const input = document.getElementById('promoInput');
             const code = input.value.trim().toUpperCase();
 
@@ -909,11 +866,7 @@
                 return;
             }
 
-            let userPromos = users[curUser].usedPromos;
-            if (!userPromos) {
-                userPromos = [];
-            }
-
+            let userPromos = users[curUser].usedPromos || [];
             if (userPromos.indexOf(code) !== -1) {
                 showToast('Вы уже активировали этот промокод', 'lose');
                 return;
@@ -934,8 +887,9 @@
             }
 
             if (promo.type === 'fixed') {
-                const currentBalance = getBal();
-                setBal(currentBalance + promo.amount);
+                users[curUser].balance = (users[curUser].balance || 0) + promo.amount;
+                save(U_KEY, users);
+                refreshUI();
                 showToast('🎁 +' + promo.amount.toFixed(2) + ' ₽ по промокоду!', 'win');
             } else if (promo.type === 'percent') {
                 showToast('Этот промокод активируется на странице «Бонусы»', 'lose');
@@ -946,8 +900,7 @@
             users[curUser].usedPromos = userPromos;
             save(U_KEY, users);
 
-            usedCount = usedCount + 1;
-            promo.used = usedCount;
+            promo.used = usedCount + 1;
             save(P_KEY, promos);
 
             input.value = '';
@@ -957,18 +910,15 @@
         function renderGames() {
             const settings = load(G_KEY, {});
             const grid = document.getElementById('gamesGrid');
-
             let html = '';
 
             for (let i = 0; i < GAMES_LIST.length; i++) {
                 const game = GAMES_LIST[i];
                 const gameSettings = settings[game.id];
-
                 let isDisabled = false;
-                if (gameSettings) {
-                    if (gameSettings.enabled === false) {
-                        isDisabled = true;
-                    }
+
+                if (gameSettings && gameSettings.enabled === false) {
+                    isDisabled = true;
                 }
 
                 if (isDisabled) {
@@ -990,41 +940,45 @@
 
         /* ========== ИНИЦИАЛИЗАЦИЯ ========== */
         function init() {
-            users = load(U_KEY, {});
-            curUser = load(S_KEY, null);
+            try {
+                users = load(U_KEY, {});
+                curUser = load(S_KEY, null);
 
-            // Читаем реферальный код. Сначала из Telegram, потом из URL (для тестов)
-            let refParam = null;
-            
-            // Проверка Telegram (startapp)
-            const tg = window.Telegram?.WebApp;
-            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
-                refParam = tg.initDataUnsafe.start_param;
-            } 
-            
-            // Если в ТГ пусто, смотрим в ссылке (например, index.html?ref=admin)
-            if (!refParam) {
-                let urlParams = new URLSearchParams(window.location.search);
-                refParam = urlParams.get('ref');
-            }
+                // Проверка Telegram
+                let refParam = null;
+                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+                    refParam = window.Telegram.WebApp.initDataUnsafe.start_param;
+                }
+                
+                if (!refParam) {
+                    let urlParams = new URLSearchParams(window.location.search);
+                    refParam = urlParams.get('ref');
+                }
 
-            if (refParam) {
-                localStorage.setItem('winplay_pending_ref', refParam.toLowerCase());
-            }
+                if (refParam) {
+                    localStorage.setItem('winplay_pending_ref', refParam.toLowerCase());
+                }
 
-            if (curUser) {
-                if (!users[curUser]) {
+                if (curUser && !users[curUser]) {
                     curUser = null;
                     localStorage.removeItem(S_KEY);
                 }
-            }
 
-            refreshUI();
-            renderGames();
+                refreshUI();
+                renderGames();
 
-            if (!curUser) {
-                openAuth();
+                if (!curUser) {
+                    openAuth();
+                }
+            } catch (e) {
+                console.error('Ошибка инициализации:', e);
             }
         }
 
-        init();
+        // Запуск после полной загрузки страницы
+        window.addEventListener('load', function() {
+            init();
+        });
+    </script>
+</body>
+</html>
